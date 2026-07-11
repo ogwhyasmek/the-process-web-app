@@ -1,0 +1,501 @@
+/* ------------------------------------------------------------------
+   Trade Cockpit styles: checklist, sizing tools, options lab,
+   reference cards, and the print sheet.
+   ------------------------------------------------------------------ */
+
+.section-title {
+  font-size: 16px;
+  margin-top: 8px;
+}
+.section-sub {
+  color: var(--text-dim);
+  font-size: 13.5px;
+  margin: 4px 0 14px;
+  max-width: 62ch;
+}
+
+/* --- layout --- */
+.cockpit-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.cockpit-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+@media (max-width: 1020px) {
+  .cockpit-pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- checklist --- */
+.checklist-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+.checklist-counter {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+.checklist-counter.is-complete {
+  background: var(--gain-soft);
+  color: var(--gain);
+}
+
+.checklist-bar {
+  height: 4px;
+  margin: 14px 0 6px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.checklist-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--amber);
+  transition: width 200ms ease;
+}
+.checklist-bar-fill.is-complete {
+  background: var(--gain);
+}
+
+.checklist-rules {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.rule {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+}
+.checklist-rules li:last-child .rule {
+  border-bottom: none;
+}
+.rule:hover {
+  background: var(--surface-2);
+}
+.rule input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--amber);
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0;
+}
+.rule-id {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+}
+.rule-text {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.rule.is-checked .rule-text {
+  color: var(--text);
+}
+
+.checklist-verdict {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+.checklist-verdict.is-complete {
+  background: var(--gain-soft);
+  color: var(--gain);
+}
+.checklist-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.cooloff {
+  margin: 2px 8px 8px 46px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--loss-soft);
+  color: var(--loss);
+}
+
+/* --- tools (sizer / ticket / greeks / vol) --- */
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0 16px;
+}
+.tool-warning {
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  background: var(--loss-soft);
+  color: var(--loss);
+}
+.tool-verdict,
+.tool-note {
+  margin-top: 12px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  max-width: 58ch;
+}
+
+.tool-outputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+  margin: 14px 0 0;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.out dt {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.out dd {
+  margin: 2px 0 0;
+  font-size: 16px;
+}
+.out .out-big {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--amber);
+}
+.out .out-text {
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+
+.tool-log {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.tool-log .field {
+  margin-bottom: 0;
+  min-width: 110px;
+}
+.tool-log .btn {
+  margin-bottom: 1px;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- segmented control (call/put) --- */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.seg-btn {
+  padding: 7px 22px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--surface-2);
+}
+.seg-btn.is-active {
+  background: var(--amber);
+  color: #14100a;
+}
+
+/* --- payoff diagram --- */
+.payoff {
+  margin: 18px 0 0;
+}
+.payoff svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.payoff-zero {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.payoff-floor {
+  stroke: var(--loss);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  opacity: 0.6;
+}
+.payoff-line {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+}
+.payoff-loss {
+  fill: var(--loss-soft);
+}
+.payoff-gain {
+  fill: var(--gain-soft);
+}
+.payoff-spot {
+  stroke: var(--text-faint);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.payoff-be {
+  fill: var(--amber);
+}
+.payoff-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--text);
+}
+.payoff-label.dim {
+  fill: var(--text-faint);
+}
+.payoff-label.amber {
+  fill: var(--amber);
+}
+.payoff-label.loss {
+  fill: var(--loss);
+}
+
+/* --- IV rank scale --- */
+.ivrank {
+  margin-top: 14px;
+}
+.ivrank-scale {
+  position: relative;
+  height: 8px;
+  border-radius: 99px;
+  background: linear-gradient(
+    to right,
+    var(--gain-soft),
+    var(--amber-soft) 50%,
+    var(--loss-soft)
+  );
+  border: 1px solid var(--line);
+}
+.ivrank-fill {
+  display: none;
+}
+.ivrank-marker {
+  position: absolute;
+  top: -4px;
+  width: 3px;
+  height: 16px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--amber);
+}
+.ivrank-legend {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+.ivrank-value {
+  color: var(--amber);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* --- account killers --- */
+.killers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 780px) {
+  .killers {
+    grid-template-columns: 1fr;
+  }
+}
+.killer {
+  padding: 0;
+  overflow: hidden;
+}
+.killer-toggle {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'name chevron'
+    'line chevron';
+  gap: 2px 12px;
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+}
+.killer-toggle:hover {
+  background: var(--surface-2);
+}
+.killer-name {
+  grid-area: name;
+  font-weight: 600;
+  font-size: 14.5px;
+}
+.killer-line {
+  grid-area: line;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.killer-chevron {
+  grid-area: chevron;
+  align-self: center;
+  font-size: 18px;
+  color: var(--amber);
+}
+.killer-fixes {
+  margin: 0;
+  padding: 4px 18px 16px 34px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.killer.is-open {
+  border-color: var(--line-strong);
+}
+
+/* --- reference table --- */
+.table-scroll {
+  overflow-x: auto;
+}
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.ref-table th,
+.ref-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.ref-table thead th {
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.ref-table tbody th {
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ref-table td {
+  color: var(--text-dim);
+}
+.ref-table tbody tr:last-child th,
+.ref-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* --- earnings calendar --- */
+.earnings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.earnings-item {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+}
+.earnings-item:last-child {
+  border-bottom: none;
+}
+.earnings-sym {
+  font-weight: 600;
+  min-width: 64px;
+}
+.earnings-hour {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+/* --- print sheet (spec §6.2.2 "print blank checklist") --- */
+.print-sheet {
+  display: none;
+}
+@media print {
+  #root {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .print-sheet {
+    display: block;
+    color: #000;
+    background: #fff;
+    font-family: Georgia, 'Times New Roman', serif;
+    padding: 24px;
+    max-width: 640px;
+  }
+  .print-sheet h1 {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+  .print-date {
+    margin: 12px 0 20px;
+  }
+  .print-sheet ol {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .print-box {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid #000;
+    margin-right: 8px;
+    vertical-align: -2px;
+  }
+  .print-foot {
+    margin-top: 28px;
+    font-style: italic;
+  }
+}
