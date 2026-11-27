@@ -13,36 +13,34 @@ accounts, no cloud, and no market-data API key ever reaches the browser.
 ├── client/    the web app (Vite + React + TypeScript)
 ├── server/    the local market-data proxy (Node + Express) — holds the API key,
 │              owns caching (~24h fundamentals) and throttling (~1 req/sec)
-├── backups/   created on demand — timestamped JSON snapshots of your data
-└── prototypes and refrence material/   earlier prototypes (reference only)
+├── worker/    the Cloudflare Worker — the hosted twin of server/
+└── backups/   created on demand — timestamped JSON snapshots of your data
+               (git-ignored: it holds your trade history)
 ```
 
 ## Requirements
 
-None — a Node.js runtime is bundled inside the project at `.tools/node`, so
-nothing needs to be installed on the system. (If you ever install Node
-system-wide, plain `npm run dev` works too.)
+[Node.js](https://nodejs.org) 18 or newer. (Optionally, drop a Node runtime
+into `.tools/node/` — the scripts use it if present, and it's git-ignored.)
 
 ## First-time setup
 
-1. Install dependencies (installs for the root, `server/`, and `client/`):
+1. Install dependencies (installs for the root, `server/`, and `client/`).
+   This also creates `server/.env` from `server/.env.example`:
 
    ```sh
    ./setup.sh
    ```
 
-2. Give the proxy your market-data key:
-
-   ```sh
-   cp server/.env.example server/.env
-   ```
-
-   Open `server/.env` and paste your finnhub.io API key after
-   `FINNHUB_API_KEY=`. The free tier works — the proxy throttles itself to
+2. Give the proxy your market-data key: open `server/.env` and paste your
+   finnhub.io API key after `FINNHUB_API_KEY=`. The file is git-ignored —
+   never commit it. The free tier works — the proxy throttles itself to
    stay inside its 60 requests/minute limit.
 
-   Without a key the app still runs; live-data features show clearly-labeled
-   demo data instead.
+   Without a key the app still runs: the ticker shows clearly-labeled demo
+   prices, and the Screener and Stock Analyzer explain that a key is needed.
+   Everything that doesn't need market data (Cockpit, Guardrail, Trade Log,
+   Analytics, Reference) works fully.
 
 ## Run it
 
@@ -55,6 +53,11 @@ Then open **http://localhost:4610**.
 That one command starts both halves: the proxy on `127.0.0.1:4600` and the
 app on `localhost:4610` (the app forwards all `/api` calls to the proxy).
 
+The proxy only answers to this computer — nobody else on your network can
+reach it, read your backup snapshots, or spend your API quota. If you deploy
+`server/` to a hosted platform instead, set `HOST=0.0.0.0` there (see
+`server/.env.example`).
+
 ## Deploying to Cloudflare (one Worker, via GitHub)
 
 The repo deploys as a single Cloudflare Worker: the built client is served
@@ -65,6 +68,7 @@ runs locally in dev; the Worker is its hosted twin.
 **1. Cloudflare dashboard → Workers & Pages → create/import this repo**, then
 under the build configuration set:
 
+- Root directory: `the-process` (the app lives in this subfolder of the repo)
 - Build command: `npm run build` (installs client deps and builds `client/dist`)
 - Deploy command: `npx wrangler deploy`
 
@@ -74,7 +78,12 @@ under the build configuration set:
   `FINNHUB_API_KEY`
 - Or locally: `npx wrangler secret put FINNHUB_API_KEY`
 
-Without the key the site still deploys and runs on labeled demo data.
+Without the key the site still deploys; the ticker shows labeled demo
+prices, and the research pages explain that no key is set.
+
+**3. Put it behind a login.** The Worker URL is public, so anyone who finds
+it can spend your Finnhub quota. Cloudflare Access (Zero Trust → Access →
+Applications) can restrict it to your own email for free.
 
 Notes for the hosted version:
 
