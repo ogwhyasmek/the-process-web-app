@@ -9,7 +9,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { VerdictGauge } from '../components/analyzer/VerdictGauge';
 import { TechnicalChart } from '../components/analyzer/TechnicalChart';
-import { apiGet, type Envelope, type DataSource } from '../lib/api';
+import { apiGet, explainDataOutage, type Envelope, type DataSource } from '../lib/api';
 import { extractFundamentals, type Fundamentals } from '../lib/grading';
 import {
   applyFundamentalSignals,
@@ -60,6 +60,8 @@ export function Analyzer() {
   const [input, setInput] = useState(params.get('symbol') ?? '');
   const [busy, setBusy] = useState(false);
   const [warning, setWarning] = useState<string | null>(null);
+  /** Expected 'no data available' state — shown calmly, not as an error. */
+  const [notice, setNotice] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [sent, setSent] = useState(false);
 
@@ -70,6 +72,7 @@ export function Analyzer() {
       return;
     }
     setWarning(null);
+    setNotice(null);
     setBusy(true);
     setSent(false);
     try {
@@ -148,8 +151,9 @@ export function Analyzer() {
         source: quote.source,
       });
       setParams({ symbol }, { replace: true });
-    } catch (e) {
-      setWarning(`Could not reach live data (${(e as Error).message}). Research needs a connection — everything else in the app still works.`);
+    } catch {
+      setAnalysis(null);
+      setNotice(await explainDataOutage());
     } finally {
       setBusy(false);
     }
@@ -208,6 +212,11 @@ export function Analyzer() {
         ))}
       </form>
       {warning && <p className="tool-warning" role="alert">{warning}</p>}
+      {notice && (
+        <p className="tool-hint" role="status">
+          Can't read {input.trim().toUpperCase() || 'that symbol'} right now. {notice}
+        </p>
+      )}
 
       {a && (
         <>

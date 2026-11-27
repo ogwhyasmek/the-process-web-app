@@ -78,6 +78,18 @@
 .btn-primary:hover {
   background: #f0b155;
 }
+/* Disabled reads as clearly "not yet" — the same flat, quiet treatment
+   for every button, so a disabled primary never looks like a dimmed but
+   clickable amber one. */
+.btn:disabled,
+.btn:disabled:hover,
+.btn-primary:disabled,
+.btn-primary:disabled:hover {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
 
 .save-note {
   font-size: 13px;

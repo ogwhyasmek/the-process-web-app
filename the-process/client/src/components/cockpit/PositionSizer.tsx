@@ -47,9 +47,12 @@ export function PositionSizer({
     target: Number(target),
   });
   const out = 'warning' in result ? null : result;
+  // Until every field has something in it, guide — don't scold. Red is
+  // reserved for a filled-in setup that genuinely doesn't work.
+  const incomplete = [account, risk, entry, stop, target].some((v) => v.trim() === '');
 
   async function logSetup() {
-    if (!out) return;
+    if (!out || incomplete) return;
     await addTrade({
       date,
       symbol: symbol.trim().toUpperCase(),
@@ -94,22 +97,26 @@ export function PositionSizer({
         <div className="field">
           <label htmlFor="sz-entry">Entry price ($)</label>
           <input id="sz-entry" className="num" type="number" min="0" step="any" inputMode="decimal"
-            value={entry} onChange={(e) => setEntry(e.target.value)} placeholder="0.00" />
+            value={entry} onChange={(e) => setEntry(e.target.value)} placeholder="e.g. 50.00" />
         </div>
         <div className="field">
           <label htmlFor="sz-stop">Stop price ($)</label>
           <input id="sz-stop" className="num" type="number" min="0" step="any" inputMode="decimal"
-            value={stop} onChange={(e) => setStop(e.target.value)} placeholder="0.00" />
+            value={stop} onChange={(e) => setStop(e.target.value)} placeholder="e.g. 48.00" />
           <span className="field-hint">Where you're wrong — decided now, while calm.</span>
         </div>
         <div className="field">
           <label htmlFor="sz-target">Target price ($)</label>
           <input id="sz-target" className="num" type="number" min="0" step="any" inputMode="decimal"
-            value={target} onChange={(e) => setTarget(e.target.value)} placeholder="0.00" />
+            value={target} onChange={(e) => setTarget(e.target.value)} placeholder="e.g. 54.00" />
         </div>
       </div>
 
-      {!out ? (
+      {incomplete ? (
+        <p className="tool-hint" role="status">
+          Enter your entry, stop and target to see the position size.
+        </p>
+      ) : !out ? (
         <p className="tool-warning" role="status">
           {'warning' in result ? result.warning : ''}
         </p>
@@ -150,7 +157,7 @@ export function PositionSizer({
           <input id="sz-date" type="date" className="num" value={date}
             onChange={(e) => setDate(e.target.value)} />
         </div>
-        <button className="btn btn-primary" onClick={logSetup} disabled={!out}>
+        <button className="btn btn-primary" onClick={logSetup} disabled={!out || incomplete}>
           Log this setup → Trade Log
         </button>
       </div>

@@ -20,6 +20,7 @@ export function VolatilityRead({ spot, dte }: { spot: number; dte: number }) {
   const [symbol, setSymbol] = useState('');
   const [earningsDate, setEarningsDate] = useState<string | null>(null);
 
+  const ivIncomplete = [ivNow, ivLow, ivHigh].some((v) => v.trim() === '');
   const rank = ivRank(Number(ivNow), Number(ivLow), Number(ivHigh));
   const move = expectedMove(spot, Number(ivNow), dte);
 
@@ -68,17 +69,17 @@ export function VolatilityRead({ spot, dte }: { spot: number; dte: number }) {
         <div className="field">
           <label htmlFor="vr-now">Current IV (%)</label>
           <input id="vr-now" className="num" type="number" min="0" step="any" inputMode="decimal"
-            value={ivNow} onChange={(e) => setIvNow(e.target.value)} placeholder="42" />
+            value={ivNow} onChange={(e) => setIvNow(e.target.value)} placeholder="e.g. 42" />
         </div>
         <div className="field">
           <label htmlFor="vr-low">52-week IV low (%)</label>
           <input id="vr-low" className="num" type="number" min="0" step="any" inputMode="decimal"
-            value={ivLow} onChange={(e) => setIvLow(e.target.value)} placeholder="15" />
+            value={ivLow} onChange={(e) => setIvLow(e.target.value)} placeholder="e.g. 15" />
         </div>
         <div className="field">
           <label htmlFor="vr-high">52-week IV high (%)</label>
           <input id="vr-high" className="num" type="number" min="0" step="any" inputMode="decimal"
-            value={ivHigh} onChange={(e) => setIvHigh(e.target.value)} placeholder="60" />
+            value={ivHigh} onChange={(e) => setIvHigh(e.target.value)} placeholder="e.g. 60" />
         </div>
         <div className="field">
           <label htmlFor="vr-sym">Symbol (for the earnings check)</label>
@@ -87,9 +88,14 @@ export function VolatilityRead({ spot, dte }: { spot: number; dte: number }) {
         </div>
       </div>
 
-      {rank == null ? (
+      {ivIncomplete ? (
+        <p className="tool-hint" role="status">
+          Enter today's IV and its 52-week low and high (from your broker's option chain) to see
+          the IV rank.
+        </p>
+      ) : rank == null ? (
         <p className="tool-warning" role="status">
-          Enter current IV plus its 52-week low and high (low must sit below high).
+          The 52-week IV low must sit below the high.
         </p>
       ) : (
         <>

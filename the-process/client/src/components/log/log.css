@@ -178,6 +178,13 @@ tr:hover .cell-computed {
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius);
 }
+.log-empty p {
+  margin: 0 0 10px;
+}
+.log-empty .field-hint {
+  max-width: 52ch;
+  margin: 0 auto 14px;
+}
 
 .add-form h2 {
   font-size: 15px;
