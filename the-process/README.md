@@ -20,7 +20,7 @@ accounts, no cloud, and no market-data API key ever reaches the browser.
 
 ## Requirements
 
-[Node.js](https://nodejs.org) 18 or newer. (Optionally, drop a Node runtime
+[Node.js](https://nodejs.org) 20 or newer. (Optionally, drop a Node runtime
 into `.tools/node/` — the scripts use it if present, and it's git-ignored.)
 
 ## First-time setup
@@ -57,6 +57,23 @@ The proxy only answers to this computer — nobody else on your network can
 reach it, read your backup snapshots, or spend your API quota. If you deploy
 `server/` to a hosted platform instead, set `HOST=0.0.0.0` there (see
 `server/.env.example`).
+
+## Tests
+
+```sh
+npm test --prefix client   # formulas, grading, signals, analytics, backup/restore
+npm test --prefix server   # proxy network guards, backup route, cache, throttle
+```
+
+The client tests pin every formula and threshold in the spec (§6) —
+including the Analytics insight gates, which must stay silent one trade
+short of their minimum sample. Black-Scholes is checked against
+independently computed reference prices. Backup/restore runs against an
+in-memory IndexedDB, including a failed restore leaving data untouched.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs both suites, the
+typecheck and the production build on every push, and fails on any new
+high or critical dependency advisory.
 
 ## Deploying to Cloudflare (one Worker, via GitHub)
 
