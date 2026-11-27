@@ -42,5 +42,6 @@ export const config = {
   finnhubMinIntervalMs: 1050,
 
   // Where "snapshot to disk" backups land (project root /backups).
-  backupsDir: path.join(here, '..', '..', 'backups'),
+  // BACKUPS_DIR overrides it — the test suite points it at a temp folder.
+  backupsDir: process.env.BACKUPS_DIR || path.join(here, '..', '..', 'backups'),
 };

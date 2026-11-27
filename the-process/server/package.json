@@ -5,11 +5,12 @@
   "description": "Market-data proxy for The Process. Holds the API key, owns caching and throttling. The browser never sees a secret.",
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "dev": "node --watch src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "node --test"
   },
   "dependencies": {
     "cors": "^2.8.5",
