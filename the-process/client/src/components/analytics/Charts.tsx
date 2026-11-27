@@ -17,8 +17,11 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceLine,
+  ReferenceArea,
+  ReferenceDot,
 } from 'recharts';
 import type { EquityPoint } from '../../lib/stats';
+import { drawdownSpan, winRateDomain } from '../../lib/analytics';
 import { CHART, AXIS, TOOLTIP_STYLE } from './chartTheme';
 
 const fmtR1 = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)}R`;
@@ -30,6 +33,9 @@ export function EquityChart({
   points: EquityPoint[];
   maxDrawdown: number;
 }) {
+  // Spec §6.5: the curve starts at 0 before the first trade.
+  const data = [{ index: 0, cumR: 0, drawdown: 0 }, ...points];
+  const dd = drawdownSpan(points, maxDrawdown);
   return (
     <figure className="chart-card card">
       <figcaption>
@@ -40,7 +46,7 @@ export function EquityChart({
         </p>
       </figcaption>
       <ResponsiveContainer width="100%" height={230}>
-        <AreaChart data={points} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
+        <AreaChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
           <defs>
             <linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={CHART.amber} stopOpacity={0.28} />
@@ -48,8 +54,25 @@ export function EquityChart({
             </linearGradient>
           </defs>
           <CartesianGrid stroke={CHART.grid} strokeDasharray="3 5" vertical={false} />
-          <XAxis dataKey="index" {...AXIS} label={undefined} />
+          <XAxis
+            dataKey="index"
+            type="number"
+            domain={[0, 'dataMax']}
+            allowDecimals={false}
+            {...AXIS}
+          />
           <YAxis {...AXIS} tickFormatter={(v: number) => `${v}R`} />
+          {dd && (
+            // The worst peak-to-trough slide, drawn where it happened.
+            <ReferenceArea
+              x1={dd.peak}
+              x2={dd.trough}
+              fill={CHART.loss}
+              fillOpacity={0.1}
+              stroke="none"
+              ifOverflow="extendDomain"
+            />
+          )}
           <Tooltip
             {...TOOLTIP_STYLE}
             formatter={(value: number, name: string) =>
@@ -58,14 +81,32 @@ export function EquityChart({
             labelFormatter={(l: number) => `trade #${l}`}
           />
           <ReferenceLine y={0} stroke={CHART.grid} />
+          {/* Straight segments: each trade is a discrete step, and smoothing
+              would invent curves between trades and soften sharp losses. */}
           <Area
-            type="monotone"
+            type="linear"
             dataKey="cumR"
             stroke={CHART.amber}
             strokeWidth={2}
             fill="url(#eqFill)"
             isAnimationActive={false}
           />
+          {dd && (
+            <ReferenceDot
+              x={dd.trough}
+              y={dd.troughR}
+              r={4}
+              fill={CHART.loss}
+              stroke={CHART.surface}
+              label={{
+                value: `max DD −${maxDrawdown.toFixed(1)}R`,
+                position: 'bottom',
+                fill: CHART.loss,
+                fontSize: 12,
+                fontFamily: AXIS.tick.fontFamily,
+              }}
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </figure>
@@ -111,6 +152,7 @@ export function RollingWinRateChart({
   total: number;
 }) {
   const window = Math.min(20, Math.max(5, Math.floor(total / 2)));
+  const domain = winRateDomain(points.map((p) => p.winRate));
   return (
     <figure className="chart-card card">
       <figcaption>
@@ -126,7 +168,7 @@ export function RollingWinRateChart({
           <LineChart data={points} margin={{ top: 6, right: 8, bottom: 0, left: -12 }}>
             <CartesianGrid stroke={CHART.grid} strokeDasharray="3 5" vertical={false} />
             <XAxis dataKey="trade" {...AXIS} />
-            <YAxis {...AXIS} domain={[0, 100]} tickFormatter={(v: number) => `${v}%`} />
+            <YAxis {...AXIS} domain={domain} tickFormatter={(v: number) => `${v}%`} />
             <Tooltip
               {...TOOLTIP_STYLE}
               formatter={(v: number) => [`${v.toFixed(0)}%`, 'win rate']}
@@ -134,7 +176,7 @@ export function RollingWinRateChart({
             />
             <ReferenceLine y={50} stroke={CHART.grid} strokeDasharray="4 4" />
             <Line
-              type="monotone"
+              type="linear"
               dataKey="winRate"
               stroke={CHART.amber}
               strokeWidth={2}

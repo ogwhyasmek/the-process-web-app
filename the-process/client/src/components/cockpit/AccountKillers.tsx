@@ -47,7 +47,7 @@ export function AccountKillers() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section aria-labelledby="killers-title">
+    <section id="account-killers" aria-labelledby="killers-title">
       <h2 id="killers-title" className="section-title">Four ways an account dies</h2>
       <p className="section-sub">
         Every tool on this page exists because of one of these. Open each for its mechanical fix.

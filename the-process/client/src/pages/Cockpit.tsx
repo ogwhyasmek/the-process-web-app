@@ -10,8 +10,7 @@ import { PositionSizer } from '../components/cockpit/PositionSizer';
 import { ContractTicket } from '../components/cockpit/ContractTicket';
 import { GreeksLab, DEFAULT_GREEKS, type GreeksInputs } from '../components/cockpit/GreeksLab';
 import { VolatilityRead } from '../components/cockpit/VolatilityRead';
-import { AccountKillers } from '../components/cockpit/AccountKillers';
-import { OptionsFuturesTable } from '../components/cockpit/OptionsFuturesTable';
+import { Link } from 'react-router';
 import { EarningsCalendar } from '../components/cockpit/EarningsCalendar';
 import { useKvState, kvGet, kvSet } from '../lib/kv';
 import { db, getSettings, type AccountSettings } from '../lib/db';
@@ -88,8 +87,13 @@ export function Cockpit() {
         </div>
       </div>
 
-      <AccountKillers />
-      <OptionsFuturesTable />
+      {/* The account-killer cards and options-vs-futures table live on
+          Reference: read once, they made this page twice as long as the
+          tools used before every trade. */}
+      <p className="cockpit-more">
+        Why every tool on this page exists:{' '}
+        <Link to="/reference#account-killers">the four ways an account dies →</Link>
+      </p>
     </Page>
   );
 }

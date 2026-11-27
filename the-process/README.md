@@ -116,13 +116,13 @@ Notes for the hosted version:
 - **Trade Cockpit** — the 7-rule pre-trade checklist (with printable version
   and a cooling-off timer after losses), Position Sizer, Options Contract
   Ticket, Greeks Lab (Black-Scholes + payoff diagram), Volatility Read, an
-  earnings calendar for the watchlist, and the four account-killer cards.
+  and an earnings calendar for the watchlist.
 - **Daily Guardrail** — today's circuit breaker: log results in R, and the
   page stands you down when your trade cap or loss limit is hit.
 - **Trade Log** — the permanent record. Rows arrive from the sizing tools
   and the Guardrail (or manual entry); computed columns are tinted;
   one-click spreadsheet export.
-- **Analytics** — equity curve, R-distribution, rolling win rate,
+- **Analytics** — equity curve (max drawdown marked), R-distribution, rolling win rate,
   weekday/month breakdowns, plan-adherence and per-symbol/per-setup tables,
   and auto-written insights that stay silent until the sample size earns them.
 - **Screener** — the watchlist graded A–F on live fundamentals across five
@@ -130,8 +130,9 @@ Notes for the hosted version:
 - **Stock Analyzer** — one-symbol deep read: verdict gauge, risk grade,
   bull/bear case, analyst consensus, and a technical chart with
   auto-detected setups. Hands off straight into the Position Sizer.
-- **Reference** — a 16-term plain-English dictionary and a Monte Carlo
-  risk-of-ruin simulator.
+- **Reference** — a Monte Carlo risk-of-ruin simulator, the four
+  account-killer cards, the options-vs-futures table, and a 16-term
+  plain-English dictionary.
 
 Everything research-flavored is a screening aid, not investment advice.
 

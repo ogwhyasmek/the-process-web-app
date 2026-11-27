@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Trade } from './db';
 import {
+  drawdownSpan,
   generateInsights,
   groupPerformance,
   netRByMonth,
@@ -14,6 +15,7 @@ import {
   resultPoints,
   rHistogram,
   rollingWinRate,
+  winRateDomain,
   type ResultPoint,
 } from './analytics';
 import { coreStats } from './stats';
@@ -217,5 +219,38 @@ describe('generateInsights — minimum-sample gates (§6.5)', () => {
     const tsla = (n: number) => spread(Array(n).fill(-0.5), { symbol: 'TSLA' });
     expect(insights(tsla(4)).some((t) => /TSLA has cost you/.test(t))).toBe(false);
     expect(insights(tsla(5)).some((t) => /TSLA has cost you -2.5R/.test(t))).toBe(true);
+  });
+});
+
+describe('drawdownSpan (equity-curve annotation)', () => {
+  const curve = (rs: number[]) => {
+    let cum = 0;
+    let peak = 0;
+    return rs.map((r, i) => {
+      cum += r;
+      peak = Math.max(peak, cum);
+      return { index: i + 1, cumR: cum, drawdown: peak - cum };
+    });
+  };
+
+  it('spans from the running peak to the first point at max drawdown', () => {
+    // cum: 2, 3, 1, 0, 4 → peak 3 at trade 2, trough 0 at trade 4
+    expect(drawdownSpan(curve([2, 1, -2, -1, 4]), 3)).toEqual({ peak: 2, trough: 4, troughR: 0 });
+  });
+
+  it('measures from the 0R start when losses come first', () => {
+    expect(drawdownSpan(curve([-1, -1, 3]), 2)).toEqual({ peak: 0, trough: 2, troughR: -2 });
+  });
+
+  it('is null with no drawdown', () => {
+    expect(drawdownSpan(curve([1, 1]), 0)).toBeNull();
+  });
+});
+
+describe('winRateDomain', () => {
+  it('pads the data by 10 points, snapped to tens, inside 0–100', () => {
+    expect(winRateDomain([42, 48, 55])).toEqual([30, 70]);
+    expect(winRateDomain([5, 95])).toEqual([0, 100]);
+    expect(winRateDomain([])).toEqual([0, 100]);
   });
 });

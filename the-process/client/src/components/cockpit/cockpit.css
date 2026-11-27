@@ -290,9 +290,12 @@
 .payoff-be {
   fill: var(--amber);
 }
+/* Font size is in SVG viewBox units (the diagram is 640 wide): 15 renders
+   at ~11.5px on desktop. The .payoff-key below repeats the key numbers in
+   real text for narrow screens, where the SVG scales down further. */
 .payoff-label {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 15px;
   fill: var(--text);
 }
 .payoff-label.dim {
@@ -433,6 +436,14 @@
 .ref-table td {
   color: var(--text-dim);
 }
+/* Gain/loss colouring must win over the dim cell colour above
+   (same specificity as .ref-table td, declared later). */
+.ref-table td.gain {
+  color: var(--gain);
+}
+.ref-table td.loss {
+  color: var(--loss);
+}
 .ref-table tbody tr:last-child th,
 .ref-table tbody tr:last-child td {
   border-bottom: none;
@@ -513,4 +524,39 @@
     margin-top: 28px;
     font-style: italic;
   }
+}
+
+/* Plain-text key under the payoff diagram (readable at any width). */
+.payoff-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin: 8px 0 6px;
+  font-size: 13px;
+}
+.payoff-key div {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.payoff-key dt {
+  color: var(--text-faint);
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+.payoff-key dd {
+  margin: 0;
+}
+.payoff-key .amber {
+  color: var(--amber);
+}
+
+/* One-line pointer to the reference material moved off this page. */
+.cockpit-more {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: var(--text-dim);
+}
+.cockpit-more a {
+  color: var(--amber);
 }

@@ -5,17 +5,17 @@
 export const CHART = {
   amber: '#e8a33d',
   gain: '#4cc38a',
-  loss: '#e5534b',
+  loss: '#ee5d55',
   grid: '#262a30',
   text: '#9ba1ab',
-  faint: '#6b7280',
+  faint: '#878d97',
   surface: '#191c20',
 } as const;
 
 /** Shared axis/tooltip props so every chart reads as one system. */
 export const AXIS = {
   stroke: CHART.grid,
-  tick: { fill: CHART.faint, fontSize: 11, fontFamily: 'ui-monospace, SF Mono, Menlo, monospace' },
+  tick: { fill: CHART.faint, fontSize: 12, fontFamily: 'ui-monospace, SF Mono, Menlo, monospace' },
   tickLine: false,
   axisLine: { stroke: CHART.grid },
 } as const;
