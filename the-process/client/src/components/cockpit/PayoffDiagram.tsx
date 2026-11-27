@@ -58,6 +58,9 @@ export function PayoffDiagram({
       : `${x(xMin)},${y(pl(xMin))} ${x(breakeven)},${zeroY} ${x(xMin)},${zeroY}`;
 
   const ticks = [xMin, strike, xMax].map((p) => ({ px: x(p), label: p.toFixed(0) }));
+  // Keep the breakeven label inside the plot: flip it left near the right edge.
+  const beNearRight = x(breakeven) > W - PAD.right - 190;
+  const spotNearRight = x(spot) > W - PAD.right - 110;
 
   return (
     <figure className="payoff">
@@ -75,7 +78,7 @@ export function PayoffDiagram({
 
         {/* max-loss floor */}
         <line x1={PAD.left} y1={y(maxLoss)} x2={W - PAD.right} y2={y(maxLoss)} className="payoff-floor" />
-        <text x={PAD.left + 4} y={y(maxLoss) - 5} className="payoff-label loss">
+        <text x={PAD.left + 4} y={y(maxLoss) - 7} className="payoff-label loss">
           max loss {fmtMoney(maxLoss)}
         </text>
 
@@ -84,13 +87,23 @@ export function PayoffDiagram({
 
         {/* spot marker (dashed vertical) */}
         <line x1={x(spot)} y1={PAD.top} x2={x(spot)} y2={H - PAD.bottom} className="payoff-spot" />
-        <text x={x(spot) + 4} y={PAD.top + 10} className="payoff-label dim">
+        <text
+          x={spotNearRight ? x(spot) - 6 : x(spot) + 6}
+          y={PAD.top + 12}
+          textAnchor={spotNearRight ? 'end' : 'start'}
+          className="payoff-label dim"
+        >
           spot {spot.toFixed(2)}
         </text>
 
         {/* breakeven marker */}
         <circle cx={x(breakeven)} cy={zeroY} r={4} className="payoff-be" />
-        <text x={x(breakeven) + 6} y={zeroY - 8} className="payoff-label amber">
+        <text
+          x={beNearRight ? x(breakeven) - 8 : x(breakeven) + 8}
+          y={zeroY - 10}
+          textAnchor={beNearRight ? 'end' : 'start'}
+          className="payoff-label amber"
+        >
           breakeven {breakeven.toFixed(2)}
         </text>
 
@@ -104,6 +117,13 @@ export function PayoffDiagram({
         {/* y-axis reference labels */}
         <text x={8} y={zeroY + 4} className="payoff-label dim">$0</text>
       </svg>
+      {/* The same three numbers in real text: the SVG scales down on a
+          phone, and these must stay readable at any width. */}
+      <dl className="payoff-key num">
+        <div><dt>Max loss</dt><dd className="loss">{fmtMoney(maxLoss)}</dd></div>
+        <div><dt>Breakeven</dt><dd className="amber">{fmtMoney(breakeven)}</dd></div>
+        <div><dt>Spot</dt><dd>{fmtMoney(spot)}</dd></div>
+      </dl>
       <figcaption className="field-hint">
         Profit or loss at expiration for one long {type} position ({multiplier}× multiplier),
         against where the stock ends up.

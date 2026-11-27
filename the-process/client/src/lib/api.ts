@@ -37,6 +37,23 @@ export async function apiGet<T>(path: string): Promise<T> {
   return res.json();
 }
 
+/**
+ * Plain-English reason live market data isn't coming through, for the
+ * research pages' empty states. Asks the proxy's /health endpoint so the
+ * message can tell "no API key" apart from "proxy not running".
+ */
+export async function explainDataOutage(): Promise<string> {
+  try {
+    const health = await apiGet<{ keyConfigured?: boolean }>('/health');
+    if (health.keyConfigured === false) {
+      return 'No market-data API key is set up yet, so research has nothing to read. Add a Finnhub key (see the README) and it will fill in.';
+    }
+    return "The market-data source isn't responding right now. Try again in a minute — everything else in the app works normally.";
+  } catch {
+    return "The data proxy can't be reached — research needs it running (./run.sh starts it). Everything else in the app works offline.";
+  }
+}
+
 /** Batch quotes for the ticker. */
 export async function fetchTickerQuotes(
   symbols: string[],

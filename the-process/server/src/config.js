@@ -12,6 +12,11 @@ dotenv.config({ path: path.join(here, '..', '.env') });
 
 export const config = {
   port: Number(process.env.PORT) || 4600,
+
+  // Interface to listen on. Loopback by default: a personal tool holding
+  // trade history and an API key must not answer to the whole network.
+  // Hosted platforms (Render/Fly/Railway) set HOST=0.0.0.0 explicitly.
+  host: process.env.HOST || '127.0.0.1',
   finnhubKey: process.env.FINNHUB_API_KEY || '',
 
   // Comma-separated list of origins allowed to call this proxy, e.g.
@@ -37,5 +42,6 @@ export const config = {
   finnhubMinIntervalMs: 1050,
 
   // Where "snapshot to disk" backups land (project root /backups).
-  backupsDir: path.join(here, '..', '..', 'backups'),
+  // BACKUPS_DIR overrides it — the test suite points it at a temp folder.
+  backupsDir: process.env.BACKUPS_DIR || path.join(here, '..', '..', 'backups'),
 };

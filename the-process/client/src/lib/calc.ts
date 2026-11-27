@@ -28,12 +28,18 @@ export interface SizerOutputs {
 
 /**
  * Returns outputs, or a plain-English warning when the spec says to blank
- * them (any field non-numeric, risk % ≤ 0, or stop distance 0).
+ * them (any field non-numeric, risk % ≤ 0, or stop distance 0) — plus two
+ * guards that keep nonsense out of the Trade Log: the account must hold
+ * money, and the stop must sit on the opposite side of entry from the
+ * target (a long's stop below entry, a short's above).
  */
 export function computeSizer(i: SizerInputs): SizerOutputs | { warning: string } {
   const values = [i.accountSize, i.riskPct, i.entry, i.stop, i.target];
   if (values.some((v) => !isFinite(v))) {
     return { warning: 'Fill in every field to see the numbers.' };
+  }
+  if (i.accountSize <= 0) {
+    return { warning: 'Account size must be above zero.' };
   }
   if (i.riskPct <= 0) {
     return { warning: 'Risk % must be above zero.' };
@@ -41,6 +47,12 @@ export function computeSizer(i: SizerInputs): SizerOutputs | { warning: string }
   const stopDistance = Math.abs(i.entry - i.stop);
   if (stopDistance === 0) {
     return { warning: 'Entry and stop are the same price — there is no risk to size from.' };
+  }
+  if (i.target > i.entry && i.stop > i.entry) {
+    return { warning: 'For a long trade (target above entry) the stop must sit below entry — that is where you are wrong.' };
+  }
+  if (i.target < i.entry && i.stop < i.entry) {
+    return { warning: 'For a short trade (target below entry) the stop must sit above entry — that is where you are wrong.' };
   }
   const dollarRisk = i.accountSize * (i.riskPct / 100);
   const rewardDistance = Math.abs(i.target - i.entry);
@@ -85,6 +97,7 @@ export function computeTicket(i: TicketInputs): TicketOutputs | { warning: strin
   if (values.some((v) => !isFinite(v))) {
     return { warning: 'Fill in every field to see the numbers.' };
   }
+  if (i.accountSize <= 0) return { warning: 'Account size must be above zero.' };
   if (i.riskPct <= 0) return { warning: 'Risk % must be above zero.' };
   if (i.multiplier <= 0) return { warning: 'The contract multiplier must be above zero (100 for standard options).' };
   if (i.entryPremium <= i.stopPremium) {

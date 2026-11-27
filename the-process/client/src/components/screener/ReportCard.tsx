@@ -4,7 +4,7 @@
  * performance vs the S&P 500, and a short written verdict.
  */
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { gradeStock, letterGrade, isUnprofitable, type Fundamentals } from '../../lib/grading';
 import type { ScanEntry } from '../../lib/screenerData';
 import { fmtCap, fmtNum, fmtPct } from '../../lib/format';

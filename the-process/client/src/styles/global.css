@@ -16,14 +16,16 @@
   /* Text */
   --text: #e8e6e1;
   --text-dim: #9ba1ab;
-  --text-faint: #6b7280;
+  /* #878d97: the faintest text that still clears WCAG AA (4.5:1) on every
+     surface in the ramp, down to --surface-3. */
+  --text-faint: #878d97;
 
   /* Brand + semantics */
   --amber: #e8a33d;
   --amber-soft: rgba(232, 163, 61, 0.14);
   --gain: #4cc38a;
   --gain-soft: rgba(76, 195, 138, 0.14);
-  --loss: #e5534b;
+  --loss: #ee5d55; /* AA on --surface-3 too (was #e5534b, 4.2:1) */
   --loss-soft: rgba(229, 83, 75, 0.14);
   --caution: #d9b13b;
 
@@ -117,6 +119,17 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 }
 
 ::placeholder { color: var(--text-faint); }
+
+/* Compact inputs (Trade Log filters, inline row edit, Screener add box)
+   shrink below 16px on desktop. On touch screens and narrow viewports,
+   force them back to 16px: anything smaller makes iOS Safari zoom the page
+   on focus (spec §9). !important because it must beat those
+   component-level sizes wherever they are declared. */
+@media (max-width: 840px), (pointer: coarse) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
 
 /* Respect the user's motion preference globally (spec §9). */
 @media (prefers-reduced-motion: reduce) {

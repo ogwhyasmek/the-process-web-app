@@ -53,7 +53,7 @@ class UpstreamError extends Error {
   }
 }
 
-async function finnhub(env, path, params) {
+async function finnhub(env, path, params, options) {
   if (!env.FINNHUB_API_KEY) {
     throw new UpstreamError(503, 'FINNHUB_API_KEY secret is not set on this Worker');
   }
@@ -62,10 +62,10 @@ async function finnhub(env, path, params) {
     const res = await fetch(`${FINNHUB}/${path}?${qs}`);
     if (!res.ok) throw new UpstreamError(res.status, `Finnhub ${path} responded ${res.status}`);
     return res.json();
-  });
+  }, options);
 }
 
-const fetchQuote = (env, s) => finnhub(env, 'quote', { symbol: s });
+const fetchQuote = (env, s, options) => finnhub(env, 'quote', { symbol: s }, options);
 const fetchProfile = (env, s) => finnhub(env, 'stock/profile2', { symbol: s });
 const fetchMetrics = (env, s) => finnhub(env, 'stock/metric', { symbol: s, metric: 'all' });
 const fetchRecommendations = (env, s) => finnhub(env, 'stock/recommendation', { symbol: s });
@@ -150,7 +150,8 @@ async function handleQuotes(url, env) {
     }
 
     try {
-      const data = await fetchQuote(env, symbol);
+      // Background ticker refresh: yields to research requests.
+      const data = await fetchQuote(env, symbol, { priority: 'low' });
       cache.set(key, data, TTL.quote);
       quotes[symbol] = {
         source: 'live',

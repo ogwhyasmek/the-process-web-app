@@ -13,9 +13,12 @@ import type { AccountSettings } from '../../lib/db';
 export function ContractTicket({
   settings,
   allRulesChecked,
+  onLogged,
 }: {
   settings: AccountSettings;
   allRulesChecked: boolean;
+  /** Fired after the row is saved — the Cockpit clears the checklist. */
+  onLogged?: () => void;
 }) {
   const [account, setAccount] = useState(String(settings.accountSize));
   const [risk, setRisk] = useState(String(settings.riskPct));
@@ -38,7 +41,9 @@ export function ContractTicket({
     multiplier: Number(mult),
   });
   const out = 'warning' in result ? null : result;
-  const canLog = !!out && !out.zeroContracts;
+  // Guide while the form is still being filled in; red only for real mistakes.
+  const incomplete = [account, risk, entry, stop, target, mult].some((v) => v.trim() === '');
+  const canLog = !incomplete && !!out && !out.zeroContracts;
 
   async function logSetup() {
     if (!canLog) return;
@@ -62,7 +67,10 @@ export function ContractTicket({
       notes: '',
       source: 'ticket',
     });
-    setLogged(`${symbol.trim().toUpperCase() || 'Trade'} (${tradeType}) logged — it's in the Trade Log.`);
+    onLogged?.();
+    setLogged(
+      `${symbol.trim().toUpperCase() || 'Trade'} (${tradeType}) logged — it's in the Trade Log. Checklist cleared for the next trade.`,
+    );
     setTimeout(() => setLogged(null), 4000);
   }
 
@@ -87,18 +95,18 @@ export function ContractTicket({
         <div className="field">
           <label htmlFor="tk-entry">Entry premium ($/share)</label>
           <input id="tk-entry" className="num" type="number" min="0" step="any" inputMode="decimal"
-            value={entry} onChange={(e) => setEntry(e.target.value)} placeholder="2.50" />
+            value={entry} onChange={(e) => setEntry(e.target.value)} placeholder="e.g. 2.50" />
         </div>
         <div className="field">
           <label htmlFor="tk-stop">Stop premium ($/share)</label>
           <input id="tk-stop" className="num" type="number" min="0" step="any" inputMode="decimal"
-            value={stop} onChange={(e) => setStop(e.target.value)} placeholder="1.50" />
+            value={stop} onChange={(e) => setStop(e.target.value)} placeholder="e.g. 1.50" />
           <span className="field-hint">Below entry — where you sell and accept the small loss.</span>
         </div>
         <div className="field">
           <label htmlFor="tk-target">Target premium ($/share)</label>
           <input id="tk-target" className="num" type="number" min="0" step="any" inputMode="decimal"
-            value={target} onChange={(e) => setTarget(e.target.value)} placeholder="4.50" />
+            value={target} onChange={(e) => setTarget(e.target.value)} placeholder="e.g. 4.50" />
         </div>
         <div className="field">
           <label htmlFor="tk-mult">Contract multiplier</label>
@@ -108,7 +116,11 @@ export function ContractTicket({
         </div>
       </div>
 
-      {!out ? (
+      {incomplete ? (
+        <p className="tool-hint" role="status">
+          Enter the entry, stop and target premiums to see how many contracts fit your risk.
+        </p>
+      ) : !out ? (
         <p className="tool-warning" role="status">
           {'warning' in result ? result.warning : ''}
         </p>

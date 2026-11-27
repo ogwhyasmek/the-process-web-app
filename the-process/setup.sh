@@ -1,9 +1,20 @@
 #!/bin/sh
-# One-time setup: installs dependencies for the root, server, and client
-# using the Node runtime bundled in .tools/.
+# One-time setup: installs dependencies for the root, server, and client.
+# Uses the optional bundled Node runtime in .tools/node if present,
+# otherwise the system's Node (20+).
 cd "$(dirname "$0")"
-export PATH="$PWD/.tools/node/bin:$PATH"
-npm install --no-fund --no-audit && npm run setup
+if [ -x "$PWD/.tools/node/bin/node" ]; then
+  export PATH="$PWD/.tools/node/bin:$PATH"
+fi
+if ! command -v npm >/dev/null 2>&1; then
+  echo "Node.js 20+ is required — install it from https://nodejs.org and re-run." >&2
+  exit 1
+fi
+npm install --no-fund --no-audit && npm run setup || exit 1
+if [ ! -f server/.env ]; then
+  cp server/.env.example server/.env
+  echo
+  echo "Created server/.env from the example — open it and paste your FINNHUB_API_KEY."
+fi
 echo
-echo "Setup complete. Next: cp server/.env.example server/.env and add your"
-echo "FINNHUB_API_KEY, then start the app with ./run.sh"
+echo "Setup complete. Start the app with ./run.sh"

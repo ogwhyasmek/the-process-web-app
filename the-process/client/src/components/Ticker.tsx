@@ -58,8 +58,11 @@ export function Ticker() {
 
   useEffect(() => {
     let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let lastRefreshAt = 0;
 
     async function refresh() {
+      lastRefreshAt = Date.now();
       try {
         const result = await fetchTickerQuotes(symbols);
         if (cancelled) return;
@@ -85,11 +88,29 @@ export function Ticker() {
       }
     }
 
-    refresh();
-    const timer = setInterval(refresh, REFRESH_MS);
+    // Only poll while the tab is visible. Every refresh costs ~10 upstream
+    // calls from a ~60/min budget shared with the Screener and Analyzer, so
+    // a forgotten background tab shouldn't keep spending it. Coming back
+    // refreshes at once if the prices have gone stale.
+    function start() {
+      if (timer !== undefined) return;
+      if (Date.now() - lastRefreshAt >= REFRESH_MS) refresh();
+      timer = setInterval(refresh, REFRESH_MS);
+    }
+    function stop() {
+      clearInterval(timer);
+      timer = undefined;
+    }
+    const onVisibility = () => (document.hidden ? stop() : start());
+
+    document.addEventListener('visibilitychange', onVisibility);
+    if (document.hidden) refresh(); // opened in a background tab: one fetch so it isn't empty
+    else start();
+
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [symbols]);
 

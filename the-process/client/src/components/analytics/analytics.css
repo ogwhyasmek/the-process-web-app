@@ -25,17 +25,16 @@
   }
 }
 
+/* Chart cards are <figure>s; drop the browser's default 40px side margin
+   so they line up with every other card on the page. */
+.chart-card {
+  margin: 0;
+}
 .chart-card figcaption h2 {
   font-size: 15px;
 }
 .chart-card .card-sub {
   margin-bottom: 12px;
-}
-.chart-empty {
-  padding: 28px 12px;
-  text-align: center;
-  color: var(--text-faint);
-  font-size: 13.5px;
 }
 
 /* --- insights --- */

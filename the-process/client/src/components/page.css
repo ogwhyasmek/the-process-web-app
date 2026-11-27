@@ -78,8 +78,168 @@
 .btn-primary:hover {
   background: #f0b155;
 }
+/* Disabled reads as clearly "not yet" — the same flat, quiet treatment
+   for every button, so a disabled primary never looks like a dimmed but
+   clickable amber one. */
+.btn:disabled,
+.btn:disabled:hover,
+.btn-primary:disabled,
+.btn-primary:disabled:hover {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text-faint);
+  cursor: not-allowed;
+}
 
 .save-note {
   font-size: 13px;
   color: var(--gain);
 }
+
+/* ------------------------------------------------------------------
+   Shared across pages. Pages load their own CSS lazily (route-level code
+   splitting), so anything more than one page uses must live here, in the
+   eagerly loaded stylesheet — not in another page's file.
+   ------------------------------------------------------------------ */
+
+/* Pill buttons: Screener presets, Analyzer quick picks. */
+.chip {
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+}
+.chip:hover {
+  color: var(--text);
+}
+.chip.is-active {
+  background: var(--amber-soft);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* Dashed empty-state box: Trade Log, Screener. */
+.log-empty {
+  padding: 36px 20px;
+  text-align: center;
+  color: var(--text-faint);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+}
+.log-empty p {
+  margin: 0 0 10px;
+}
+.log-empty .field-hint {
+  max-width: 52ch;
+  margin: 0 auto 14px;
+}
+
+/* Headline stats strip: Trade Log summary, Analytics headline. */
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(6, auto) 1fr;
+  gap: 20px;
+  align-items: start;
+  padding: 16px 20px;
+}
+@media (max-width: 980px) {
+  .summary-strip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .sum-verdict {
+    grid-column: 1 / -1;
+  }
+}
+.sum-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.sum-value {
+  font-size: 17px;
+  font-weight: 600;
+}
+.sum-minor {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-faint);
+  font-family: var(--font-ui);
+}
+
+/* Table cells and row action buttons: Trade Log, Screener. */
+.cell-sym {
+  font-weight: 600;
+}
+.row-btn {
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+}
+.row-btn:hover {
+  color: var(--text);
+  background: var(--surface-3);
+}
+.row-btn.is-danger:hover {
+  color: var(--loss);
+  border-color: var(--loss);
+}
+.row-btn.is-primary {
+  color: #14100a;
+  background: var(--amber);
+  border-color: var(--amber);
+}
+.row-btn + .row-btn {
+  margin-left: 6px;
+}
+
+/* "Not enough data yet" note inside a chart card: Analytics, Analyzer. */
+.chart-empty {
+  padding: 28px 12px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 13.5px;
+}
+
+/* Metric grid and range labels: Screener report card, Stock Analyzer. */
+.rc-range-label {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.rc-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 16px;
+  margin: 0;
+}
+@media (max-width: 480px) {
+  .rc-metrics { grid-template-columns: 1fr; }
+}
+.rc-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 12.5px;
+}
+.rc-metric dt {
+  color: var(--text-dim);
+}
+.rc-metric dd {
+  margin: 0;
+  font-weight: 600;
+}
+.rc-metric.cue-good dd { color: var(--gain); }
+.rc-metric.cue-warn dd { color: var(--caution); }
+.rc-metric.cue-bad dd { color: var(--loss); }

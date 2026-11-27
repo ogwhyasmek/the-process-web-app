@@ -1,0 +1,21 @@
+# Dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+.wrangler/
+
+# Secrets — the market-data API key lives here and must never be committed
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# Personal data — timestamped trade-history snapshots written by the proxy
+the-process/backups/
+
+# Bundled local Node runtime (optional, see README)
+the-process/.tools/
+
+# OS / editor noise
+.DS_Store
+*.log

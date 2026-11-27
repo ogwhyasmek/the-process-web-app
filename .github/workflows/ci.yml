@@ -1,0 +1,53 @@
+name: CI
+
+# Typecheck, test and build on every push and pull request, and fail on any
+# new high or critical dependency advisory.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  client:
+    name: Client — typecheck, test, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: the-process/client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: the-process/client/package-lock.json
+      - run: npm ci
+      - name: Unit tests
+        run: npm test
+      - name: Typecheck and production build
+        run: npm run build
+      - name: Dependency audit (fails on high/critical)
+        run: npm audit --audit-level=high
+
+  server:
+    name: Server — test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: the-process/server
+    strategy:
+      matrix:
+        node-version: [20, 22] # 20 is the minimum in package.json "engines"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: the-process/server/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - name: Dependency audit (fails on high/critical)
+        run: npm audit --audit-level=high

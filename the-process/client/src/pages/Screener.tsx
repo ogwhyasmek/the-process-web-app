@@ -10,6 +10,7 @@ import { db, ensureWatchlist, DEFAULT_WATCHLIST } from '../lib/db';
 import { gradeStock, letterGrade, PRESETS, TICKER_RE, type PresetName } from '../lib/grading';
 import { scanSymbols, type ScanEntry, type ScanProgress } from '../lib/screenerData';
 import { fmtCap, fmtNum, fmtPct } from '../lib/format';
+import { explainDataOutage } from '../lib/api';
 import '../components/screener/screener.css';
 
 type SortCol =
@@ -27,6 +28,8 @@ export function Screener() {
   const [addInput, setAddInput] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
   const [detail, setDetail] = useState<ScanEntry | null>(null);
+  /** Why nothing loaded, when a scan comes back empty for a non-empty list. */
+  const [outage, setOutage] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -48,7 +51,8 @@ export function Screener() {
     const controller = new AbortController();
     abortRef.current = controller;
     setScanning(true);
-    await scanSymbols(
+    setOutage(null);
+    const results = await scanSymbols(
       syms,
       (p, partial) => {
         setProgress(p);
@@ -56,6 +60,8 @@ export function Screener() {
       },
       { force, signal: controller.signal },
     );
+    if (controller.signal.aborted) return;
+    if (syms.length > 0 && results.length === 0) setOutage(await explainDataOutage());
     setScanning(false);
     setProgress(null);
   }
@@ -247,14 +253,25 @@ export function Screener() {
           </tbody>
         </table>
         {shown.length === 0 && !scanning && (
-          <p className="log-empty">
-            {preset ? 'No watchlist stock passes this screen right now.' : 'Watchlist is empty — add a symbol above.'}
-          </p>
+          symbols.length === 0 ? (
+            <p className="log-empty">Watchlist is empty — add a symbol above.</p>
+          ) : graded.length === 0 ? (
+            <div className="log-empty">
+              <p>Couldn't load fundamentals for any of the {symbols.length} symbols.</p>
+              {outage && <p className="field-hint">{outage}</p>}
+              <button className="btn" onClick={() => runScan(symbols, false)}>Try again</button>
+            </div>
+          ) : (
+            <p className="log-empty">No watchlist stock passes this screen right now.</p>
+          )
         )}
       </div>
       <p className="field-hint">
         Fundamentals cache for ~24 hours. Click any row for the full report card. {entries.length} of{' '}
-        {symbols.length} graded.
+        {symbols.length} graded
+        {!scanning && entries.length > 0 && entries.length < symbols.length
+          ? ` — ${symbols.length - entries.length} couldn't be loaded this time.`
+          : '.'}
       </p>
 
       {detail && <ReportCard entry={detail} onClose={() => setDetail(null)} />}

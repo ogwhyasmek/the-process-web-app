@@ -10,19 +10,24 @@ import { PositionSizer } from '../components/cockpit/PositionSizer';
 import { ContractTicket } from '../components/cockpit/ContractTicket';
 import { GreeksLab, DEFAULT_GREEKS, type GreeksInputs } from '../components/cockpit/GreeksLab';
 import { VolatilityRead } from '../components/cockpit/VolatilityRead';
-import { AccountKillers } from '../components/cockpit/AccountKillers';
-import { OptionsFuturesTable } from '../components/cockpit/OptionsFuturesTable';
+import { Link } from 'react-router';
 import { EarningsCalendar } from '../components/cockpit/EarningsCalendar';
 import { useKvState, kvGet, kvSet } from '../lib/kv';
-import { getSettings, type AccountSettings } from '../lib/db';
+import { db, getSettings, type AccountSettings } from '../lib/db';
+import { todayIso } from '../lib/format';
 import type { SizerPrefill } from '../components/cockpit/PositionSizer';
 import '../components/cockpit/cockpit.css';
 
 export function Cockpit() {
   const [settings, setSettings] = useState<AccountSettings | null>(null);
   const [prefill, setPrefill] = useState<SizerPrefill | null | 'pending'>('pending');
+  // The checklist is ticked per trade (§6.2.2), so its state must never
+  // carry over: it's stored under today's date (a new day starts blank)
+  // and cleared after every trade is logged from this page. Otherwise
+  // yesterday's 7/7 would stamp "matched my rules: Y" on today's trades.
+  const [checklistKey] = useState(() => `cockpit.checklist.${todayIso()}`);
   const [checks, setChecks, checksLoaded] = useKvState<boolean[]>(
-    'cockpit.checklist',
+    checklistKey,
     Array(7).fill(false),
   );
   const [greeks, setGreeks, greeksLoaded] = useKvState<GreeksInputs>(
@@ -32,6 +37,13 @@ export function Cockpit() {
 
   useEffect(() => {
     getSettings().then(setSettings);
+    // Drop earlier days' checklist ticks (and the old undated key).
+    db.kv
+      .where('key')
+      .startsWith('cockpit.checklist')
+      .filter((e) => e.key !== checklistKey)
+      .delete()
+      .catch(() => undefined);
     // One-shot prefill from the Stock Analyzer's handoff (§6.7).
     kvGet<SizerPrefill>('cockpit.sizerPrefill').then((p) => {
       setPrefill(p ?? null);
@@ -42,6 +54,8 @@ export function Cockpit() {
   if (!settings || !checksLoaded || !greeksLoaded || prefill === 'pending') return null;
 
   const allRulesChecked = checks.every(Boolean);
+  // Called after a setup is logged: the next trade starts from 0/7.
+  const resetChecklist = () => setChecks(Array(7).fill(false));
 
   return (
     <Page
@@ -51,8 +65,17 @@ export function Cockpit() {
       <Checklist checks={checks} onChange={setChecks} />
 
       <div className="cockpit-pair">
-        <PositionSizer settings={settings} allRulesChecked={allRulesChecked} prefill={prefill} />
-        <ContractTicket settings={settings} allRulesChecked={allRulesChecked} />
+        <PositionSizer
+          settings={settings}
+          allRulesChecked={allRulesChecked}
+          prefill={prefill}
+          onLogged={resetChecklist}
+        />
+        <ContractTicket
+          settings={settings}
+          allRulesChecked={allRulesChecked}
+          onLogged={resetChecklist}
+        />
       </div>
 
       <h2 className="section-title">Options lab</h2>
@@ -64,8 +87,13 @@ export function Cockpit() {
         </div>
       </div>
 
-      <AccountKillers />
-      <OptionsFuturesTable />
+      {/* The account-killer cards and options-vs-futures table live on
+          Reference: read once, they made this page twice as long as the
+          tools used before every trade. */}
+      <p className="cockpit-more">
+        Why every tool on this page exists:{' '}
+        <Link to="/reference#account-killers">the four ways an account dies →</Link>
+      </p>
     </Page>
   );
 }

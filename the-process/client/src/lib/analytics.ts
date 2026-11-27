@@ -5,7 +5,7 @@
  */
 import type { Trade } from './db';
 import { tradeR } from './trades';
-import { streaks, type CoreStats } from './stats';
+import { streaks, type CoreStats, type EquityPoint } from './stats';
 
 /** A decided trade result with the context the charts need. */
 export interface ResultPoint {
@@ -106,6 +106,38 @@ export function netRByMonth(
     if (sums.has(key)) sums.set(key, sums.get(key)! + p.r);
   }
   return months.map((month) => ({ month, netR: sums.get(month)! }));
+}
+
+/**
+ * Where the max drawdown happened: the first point that reaches it (the
+ * trough) and the running peak it fell from. Both are indexes on the
+ * curve, which starts at trade 0 = 0R.
+ */
+export function drawdownSpan(
+  points: EquityPoint[],
+  maxDrawdown: number,
+): { peak: number; trough: number; troughR: number } | null {
+  if (maxDrawdown <= 0) return null;
+  const i = points.findIndex((p) => Math.abs(p.drawdown - maxDrawdown) < 1e-9);
+  if (i < 0) return null;
+  const trough = points[i];
+  const peakR = trough.cumR + maxDrawdown;
+  let peak = 0; // the 0R starting point, unless a later point set the peak
+  for (let j = i - 1; j >= 0; j--) {
+    if (Math.abs(points[j].cumR - peakR) < 1e-9) {
+      peak = points[j].index;
+      break;
+    }
+  }
+  return { peak, trough: trough.index, troughR: trough.cumR };
+}
+
+/** Fit the win-rate axis to the data (10-point steps) so the trend is visible. */
+export function winRateDomain(values: number[]): [number, number] {
+  if (values.length === 0) return [0, 100];
+  const lo = Math.max(0, Math.floor((Math.min(...values) - 10) / 10) * 10);
+  const hi = Math.min(100, Math.ceil((Math.max(...values) + 10) / 10) * 10);
+  return [lo, hi];
 }
 
 // ---------------------------------------------------------------------------

@@ -2,7 +2,8 @@
  * Reference (spec §6.8): the sixteen-term dictionary and the
  * risk-of-ruin Monte Carlo simulator with its risk ladder.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router';
 import { Page } from '../components/Page';
 import {
   ruinExpectancy,
@@ -14,6 +15,8 @@ import {
   type RuinInputs,
 } from '../lib/ruin';
 import { fmtPct } from '../lib/format';
+import { AccountKillers } from '../components/cockpit/AccountKillers';
+import { OptionsFuturesTable } from '../components/cockpit/OptionsFuturesTable';
 import '../components/reference/reference.css';
 
 /** §6.8.1 — sixteen terms, defined without further jargon. */
@@ -37,12 +40,23 @@ const TERMS: Array<[string, string]> = [
 ];
 
 export function Reference() {
+  // Deep links like /reference#account-killers (from the Cockpit) — the
+  // router doesn't scroll to hashes on its own.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
+  }, [hash]);
+
   return (
     <Page
       title="Reference"
-      lede="The dictionary — sixteen terms in plain English — and the risk-of-ruin simulator that shows what position size alone does to survival odds."
+      lede="The risk-of-ruin simulator, the four ways accounts die, options vs. futures, and a sixteen-term plain-English dictionary — the read-once material behind the Cockpit's tools."
     >
       <RuinSimulator />
+
+      {/* Moved from the Cockpit: read once, not before every trade. */}
+      <AccountKillers />
+      <OptionsFuturesTable />
 
       <section aria-labelledby="dict-title">
         <h2 id="dict-title" className="section-title">Dictionary</h2>
