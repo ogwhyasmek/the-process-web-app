@@ -5,7 +5,7 @@
  * A screening aid — never a recommendation.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Page } from '../components/Page';
 import { VerdictGauge } from '../components/analyzer/VerdictGauge';
 import { TechnicalChart } from '../components/analyzer/TechnicalChart';

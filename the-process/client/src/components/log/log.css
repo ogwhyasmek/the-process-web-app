@@ -4,39 +4,6 @@
    obvious at a glance).
    ------------------------------------------------------------------ */
 
-.summary-strip {
-  display: grid;
-  grid-template-columns: repeat(6, auto) 1fr;
-  gap: 20px;
-  align-items: start;
-  padding: 16px 20px;
-}
-@media (max-width: 980px) {
-  .summary-strip {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .sum-verdict {
-    grid-column: 1 / -1;
-  }
-}
-.sum-label {
-  display: block;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.sum-value {
-  font-size: 17px;
-  font-weight: 600;
-}
-.sum-minor {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-faint);
-  font-family: var(--font-ui);
-}
-
 /* --- toolbar --- */
 .log-toolbar {
   display: flex;
@@ -116,9 +83,6 @@ tr:hover .cell-computed {
 .cell-computed.gain { color: var(--gain); }
 .cell-computed.loss { color: var(--loss); }
 
-.cell-sym {
-  font-weight: 600;
-}
 .cell-mult {
   font-size: 10.5px;
   color: var(--text-faint);
@@ -132,31 +96,6 @@ tr:hover .cell-computed {
   white-space: nowrap;
 }
 
-.row-btn {
-  padding: 3px 9px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-dim);
-  border: 1px solid var(--line-strong);
-  background: var(--surface-2);
-}
-.row-btn:hover {
-  color: var(--text);
-  background: var(--surface-3);
-}
-.row-btn.is-danger:hover {
-  color: var(--loss);
-  border-color: var(--loss);
-}
-.row-btn.is-primary {
-  color: #14100a;
-  background: var(--amber);
-  border-color: var(--amber);
-}
-.row-btn + .row-btn {
-  margin-left: 6px;
-}
 
 .row-editing input,
 .row-editing select {
@@ -171,20 +110,6 @@ tr:hover .cell-computed {
   width: 9.5em;
 }
 
-.log-empty {
-  padding: 36px 20px;
-  text-align: center;
-  color: var(--text-faint);
-  border: 1px dashed var(--line-strong);
-  border-radius: var(--radius);
-}
-.log-empty p {
-  margin: 0 0 10px;
-}
-.log-empty .field-hint {
-  max-width: 52ch;
-  margin: 0 auto 14px;
-}
 
 .add-form h2 {
   font-size: 15px;

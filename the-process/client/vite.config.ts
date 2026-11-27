@@ -10,6 +10,10 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
   },
+  // No manualChunks: route-level lazy loading (App.tsx) already isolates the
+  // charting library to Analytics and the Analyzer. Forcing a named
+  // 'charts' chunk pulled shared React code into it and made every page
+  // load it up front — checked 2026-11.
   optimizeDeps: {
     include: ['react', 'react-dom', 'dexie', 'dexie-react-hooks'],
   },

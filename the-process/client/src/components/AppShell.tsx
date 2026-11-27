@@ -3,7 +3,7 @@
  * the live ticker strip, and the page content area.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router';
 import { Ticker } from './Ticker';
 import { BackupReminder } from './BackupReminder';
 import './shell.css';

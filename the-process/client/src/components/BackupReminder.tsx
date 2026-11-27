@@ -12,7 +12,7 @@
  * trades OR the backup bookkeeping (kv) change — backing up hides the
  * banner immediately.
  */
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
 import { backupReminderDue, snoozeBackupReminder } from '../lib/backup';

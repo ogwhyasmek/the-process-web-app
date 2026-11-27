@@ -13,23 +13,6 @@
   gap: 8px;
   flex-wrap: wrap;
 }
-.chip {
-  padding: 6px 14px;
-  border-radius: 99px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-dim);
-  background: var(--surface-2);
-  border: 1px solid var(--line-strong);
-}
-.chip:hover {
-  color: var(--text);
-}
-.chip.is-active {
-  background: var(--amber-soft);
-  border-color: var(--amber);
-  color: var(--amber);
-}
 .scr-add {
   display: flex;
   gap: 8px;
@@ -223,10 +206,6 @@
   border-radius: 99px;
   background: linear-gradient(to right, var(--loss-soft), var(--gain-soft));
 }
-.rc-range-label {
-  font-size: 11px;
-  color: var(--text-faint);
-}
 .rc-relsp {
   font-size: 12.5px;
   color: var(--text-dim);
@@ -240,35 +219,6 @@
   color: var(--text-faint);
   margin: 16px 0 8px;
 }
-.rc-metrics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px 16px;
-  margin: 0;
-}
-@media (max-width: 480px) {
-  .rc-metrics { grid-template-columns: 1fr; }
-}
-.rc-metric {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  font-size: 12.5px;
-}
-.rc-metric dt {
-  color: var(--text-dim);
-}
-.rc-metric dd {
-  margin: 0;
-  font-weight: 600;
-}
-.rc-metric.cue-good dd { color: var(--gain); }
-.rc-metric.cue-warn dd { color: var(--caution); }
-.rc-metric.cue-bad dd { color: var(--loss); }
 
 .rc-actions {
   margin-top: 22px;
