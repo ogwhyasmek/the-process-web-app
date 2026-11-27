@@ -45,6 +45,26 @@ describe('ThrottleQueue', () => {
     }
   });
 
+  it('lets a normal task jump ahead of queued low-priority (ticker) tasks', async () => {
+    const queue = new ThrottleQueue(20);
+    const order = [];
+    const job = (name) => async () => { order.push(name); };
+    // Ticker refresh queues first…
+    const ticker = ['t1', 't2', 't3', 't4'].map((n) => queue.run(job(n), { priority: 'low' }));
+    // …then the user asks for research while t1 is already running.
+    await new Promise((r) => setTimeout(r, 5));
+    const research = queue.run(job('research'));
+    await Promise.all([...ticker, research]);
+    assert.deepEqual(order, ['t1', 'research', 't2', 't3', 't4']);
+  });
+
+  it('still spaces low-priority tasks by the interval', async () => {
+    const queue = new ThrottleQueue(30);
+    const starts = [];
+    await Promise.all([0, 1, 2].map(() => queue.run(async () => { starts.push(Date.now()); }, { priority: 'low' })));
+    assert.ok(starts[2] - starts[0] >= 58, `span ${starts[2] - starts[0]}ms`);
+  });
+
   it('keeps going after a task fails, passing the error to its caller only', async () => {
     const queue = new ThrottleQueue(1);
     const failed = queue.run(async () => { throw new Error('upstream 429'); });

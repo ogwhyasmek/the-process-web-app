@@ -126,7 +126,9 @@ marketData.get('/quotes', async (req, res) => {
     }
 
     try {
-      const data = await fetchQuote(symbol);
+      // Background ticker refresh: yields to research requests (§6.6/§6.7)
+      // the user is actually waiting on.
+      const data = await fetchQuote(symbol, { priority: 'low' });
       cache.set(key, data, config.ttl.quote);
       quotes[symbol] = {
         source: 'live',

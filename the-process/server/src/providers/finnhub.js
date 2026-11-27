@@ -24,8 +24,10 @@ export class UpstreamError extends Error {
  * Perform one throttled, keyed GET against Finnhub.
  * @param {string} path e.g. 'quote'
  * @param {Record<string, string>} params query params (without the token)
+ * @param {{ priority?: 'normal' | 'low' }} [options] 'low' = background work
+ *   (the ticker) that yields to requests the user is waiting on
  */
-async function get(path, params) {
+async function get(path, params, options) {
   if (!config.finnhubKey) {
     throw new UpstreamError(503, 'No FINNHUB_API_KEY configured in server/.env');
   }
@@ -34,12 +36,15 @@ async function get(path, params) {
     const res = await fetch(`${BASE}/${path}?${qs}`);
     if (!res.ok) throw new UpstreamError(res.status, `Finnhub ${path} responded ${res.status}`);
     return res.json();
-  });
+  }, options);
 }
 
-/** Live quote: { c, d, dp, h, l, o, pc, t }. */
-export function fetchQuote(symbol) {
-  return get('quote', { symbol });
+/**
+ * Live quote: { c, d, dp, h, l, o, pc, t }.
+ * @param {{ priority?: 'normal' | 'low' }} [options]
+ */
+export function fetchQuote(symbol, options) {
+  return get('quote', { symbol }, options);
 }
 
 /** Company profile: name, exchange, finnhubIndustry, marketCapitalization ($M)… */
