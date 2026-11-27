@@ -24,10 +24,13 @@ export function PositionSizer({
   settings,
   allRulesChecked,
   prefill = null,
+  onLogged,
 }: {
   settings: AccountSettings;
   allRulesChecked: boolean;
   prefill?: SizerPrefill | null;
+  /** Fired after the row is saved — the Cockpit clears the checklist. */
+  onLogged?: () => void;
 }) {
   const [account, setAccount] = useState(String(settings.accountSize));
   const [risk, setRisk] = useState(String(settings.riskPct));
@@ -73,7 +76,10 @@ export function PositionSizer({
       notes: '',
       source: 'sizer',
     });
-    setLogged(`${symbol.trim().toUpperCase() || 'Trade'} logged — it's in the Trade Log.`);
+    onLogged?.();
+    setLogged(
+      `${symbol.trim().toUpperCase() || 'Trade'} logged — it's in the Trade Log. Checklist cleared for the next trade.`,
+    );
     setTimeout(() => setLogged(null), 4000);
   }
 

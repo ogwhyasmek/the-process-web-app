@@ -13,9 +13,12 @@ import type { AccountSettings } from '../../lib/db';
 export function ContractTicket({
   settings,
   allRulesChecked,
+  onLogged,
 }: {
   settings: AccountSettings;
   allRulesChecked: boolean;
+  /** Fired after the row is saved — the Cockpit clears the checklist. */
+  onLogged?: () => void;
 }) {
   const [account, setAccount] = useState(String(settings.accountSize));
   const [risk, setRisk] = useState(String(settings.riskPct));
@@ -64,7 +67,10 @@ export function ContractTicket({
       notes: '',
       source: 'ticket',
     });
-    setLogged(`${symbol.trim().toUpperCase() || 'Trade'} (${tradeType}) logged — it's in the Trade Log.`);
+    onLogged?.();
+    setLogged(
+      `${symbol.trim().toUpperCase() || 'Trade'} (${tradeType}) logged — it's in the Trade Log. Checklist cleared for the next trade.`,
+    );
     setTimeout(() => setLogged(null), 4000);
   }
 
