@@ -124,53 +124,60 @@ async function handleQuotes(url, env) {
   if (symbols.length === 0) return json({ error: 'symbols query param is required' }, 400);
 
   const quotes = {};
-  for (const symbol of symbols) {
-    if (!env.FINNHUB_API_KEY) {
-      const demo = DEMO_QUOTES[symbol];
-      quotes[symbol] = {
-        source: 'demo',
-        fetchedAt: Date.now(),
-        price: demo?.price ?? null,
-        changePct: demo?.changePct ?? null,
-      };
-      continue;
-    }
+  // All symbols are queued at once so the ticker's quotes run back to back
+  // (~1/sec), instead of each waiting for the previous one and
+  // interleaving with research requests (~2s per quote when busy).
+  await Promise.all(
+    symbols.map(async (symbol) => {
+      if (!env.FINNHUB_API_KEY) {
+        const demo = DEMO_QUOTES[symbol];
+        quotes[symbol] = {
+          source: 'demo',
+          fetchedAt: Date.now(),
+          price: demo?.price ?? null,
+          changePct: demo?.changePct ?? null,
+        };
+        return;
+      }
 
-    const key = `quote:${symbol}`;
-    const fresh = cache.getFresh(key);
-    if (fresh !== undefined) {
-      const { ageMs } = cache.getAny(key);
-      quotes[symbol] = {
-        source: 'cache',
-        fetchedAt: Date.now() - ageMs,
-        price: fresh.c ?? null,
-        changePct: fresh.dp ?? null,
-      };
-      continue;
-    }
+      const key = `quote:${symbol}`;
+      const fresh = cache.getFresh(key);
+      if (fresh !== undefined) {
+        const { ageMs } = cache.getAny(key);
+        quotes[symbol] = {
+          source: 'cache',
+          fetchedAt: Date.now() - ageMs,
+          price: fresh.c ?? null,
+          changePct: fresh.dp ?? null,
+        };
+        return;
+      }
 
-    try {
-      // Background ticker refresh: yields to research requests.
-      const data = await fetchQuote(env, symbol, { priority: 'low' });
-      cache.set(key, data, TTL.quote);
-      quotes[symbol] = {
-        source: 'live',
-        fetchedAt: Date.now(),
-        price: data.c ?? null,
-        changePct: data.dp ?? null,
-      };
-    } catch {
-      const stale = cache.getAny(key);
-      quotes[symbol] = stale
-        ? {
-            source: 'last-known',
-            fetchedAt: Date.now() - stale.ageMs,
-            price: stale.value.c ?? null,
-            changePct: stale.value.dp ?? null,
-          }
-        : { source: 'unavailable', fetchedAt: Date.now(), price: null, changePct: null };
-    }
-  }
+      try {
+        // Refreshing a price we can already show yields to research requests;
+        // a first load (nothing cached yet) isn't deprioritized.
+        const priority = cache.getAny(key) ? 'low' : 'normal';
+        const data = await fetchQuote(env, symbol, { priority });
+        cache.set(key, data, TTL.quote);
+        quotes[symbol] = {
+          source: 'live',
+          fetchedAt: Date.now(),
+          price: data.c ?? null,
+          changePct: data.dp ?? null,
+        };
+      } catch {
+        const stale = cache.getAny(key);
+        quotes[symbol] = stale
+          ? {
+              source: 'last-known',
+              fetchedAt: Date.now() - stale.ageMs,
+              price: stale.value.c ?? null,
+              changePct: stale.value.dp ?? null,
+            }
+          : { source: 'unavailable', fetchedAt: Date.now(), price: null, changePct: null };
+      }
+      }),
+  );
 
   return json({ quotes });
 }

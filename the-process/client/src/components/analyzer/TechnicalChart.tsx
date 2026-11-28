@@ -13,6 +13,7 @@ import {
   Tooltip,
   ReferenceDot,
 } from 'recharts';
+import { fmtMonthTick, monthStartTicks } from '../../lib/format';
 import { sma, type Bar, type DetectedSetup } from '../../lib/signals';
 import { CHART, AXIS, TOOLTIP_STYLE } from '../analytics/chartTheme';
 
@@ -36,6 +37,8 @@ export function TechnicalChart({ bars, setups }: { bars: Bar[]; setups: Detected
   });
 
   const markers = setups.filter((s) => s.index >= start);
+  // One tick per month, on its first trading day (avoids repeated labels).
+  const ticks = monthStartTicks(data.map((d) => d.date));
 
   return (
     <div>
@@ -45,8 +48,10 @@ export function TechnicalChart({ bars, setups }: { bars: Bar[]; setups: Detected
           <XAxis
             dataKey="date"
             {...AXIS}
-            minTickGap={48}
-            tickFormatter={(d: string) => d.slice(2, 7)}
+            ticks={ticks}
+            interval="preserveStartEnd"
+            minTickGap={24}
+            tickFormatter={fmtMonthTick}
           />
           <YAxis {...AXIS} domain={['auto', 'auto']} tickFormatter={(v: number) => v.toFixed(0)} />
           <Tooltip
