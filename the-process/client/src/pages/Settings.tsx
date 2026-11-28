@@ -5,8 +5,9 @@
  */
 import { useEffect, useState } from 'react';
 import { Page } from '../components/Page';
-import { getSettings, saveSettings } from '../lib/db';
-import { fmtMoneyWhole } from '../lib/format';
+import { getSettings, saveSettings, type AccountSettings } from '../lib/db';
+import { fmtMoneyWhole, todayIso } from '../lib/format';
+import { applyLimitEdit, effectiveLimits } from '../lib/guardrail';
 
 interface FormState {
   accountSize: string;
@@ -18,16 +19,20 @@ interface FormState {
 export function Settings() {
   const [form, setForm] = useState<FormState | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [stored, setStored] = useState<AccountSettings | null>(null);
 
   useEffect(() => {
-    getSettings().then((s) =>
+    getSettings().then((s) => {
+      setStored(s);
+      // Show the daily limits actually in force today.
+      const limits = effectiveLimits(s, todayIso());
       setForm({
         accountSize: String(s.accountSize),
         riskPct: String(s.riskPct),
-        maxTradesPerDay: String(s.maxTradesPerDay),
-        dailyLossLimitR: String(s.dailyLossLimitR),
-      }),
-    );
+        maxTradesPerDay: String(limits.maxTradesPerDay),
+        dailyLossLimitR: String(limits.dailyLossLimitR),
+      });
+    });
   }, []);
 
   if (!form) return null;
@@ -46,14 +51,28 @@ export function Settings() {
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
-    await saveSettings({
+    const current = await getSettings();
+    // Account size and risk % apply at once. The daily limits follow the
+    // Guardrail rule: stricter now, looser from tomorrow.
+    const withAccount = {
+      ...current,
       accountSize: Math.max(0, Number(form!.accountSize) || 0),
       riskPct: Math.max(0, Number(form!.riskPct) || 0),
-      maxTradesPerDay: Math.max(0, Math.floor(Number(form!.maxTradesPerDay) || 0)),
-      dailyLossLimitR: Math.max(0, Number(form!.dailyLossLimitR) || 0),
-    });
+    };
+    const next = applyLimitEdit(
+      withAccount,
+      {
+        maxTradesPerDay: Math.max(0, Math.floor(Number(form!.maxTradesPerDay) || 0)),
+        dailyLossLimitR: Math.max(0, Number(form!.dailyLossLimitR) || 0),
+      },
+      todayIso(),
+    );
+    const { id: _id, ...rest } = next;
+    await saveSettings(rest);
+    setStored(next);
     setSavedAt(Date.now());
   }
+  const pending = stored ? effectiveLimits(stored, todayIso()).pending : null;
 
   return (
     <Page
@@ -128,6 +147,24 @@ export function Settings() {
             Down this many R in one day means the day is over. 2R is a common choice.
           </span>
         </div>
+
+        <p className="field-hint">
+          Daily limits: stricter values apply now; looser ones from tomorrow, so a limit can't be
+          raised to get out of a stand-down. 0 means no limit.
+        </p>
+        {pending && (
+          <p className="field-hint" style={{ color: 'var(--amber)' }} role="status">
+            From tomorrow:{' '}
+            {[
+              pending.maxTradesPerDay !== undefined && `trade cap ${pending.maxTradesPerDay || 'none'}`,
+              pending.dailyLossLimitR !== undefined &&
+                `loss limit ${pending.dailyLossLimitR ? `${pending.dailyLossLimitR}R` : 'none'}`,
+            ]
+              .filter(Boolean)
+              .join(', ')}
+            .
+          </p>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <button type="submit" className="btn btn-primary">

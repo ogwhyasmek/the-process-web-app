@@ -25,12 +25,15 @@ export function PositionSizer({
   allRulesChecked,
   prefill = null,
   onLogged,
+  blockToday = null,
 }: {
   settings: AccountSettings;
   allRulesChecked: boolean;
   prefill?: SizerPrefill | null;
   /** Fired after the row is saved — the Cockpit clears the checklist. */
   onLogged?: () => void;
+  /** Why new setups for today can't be logged right now (stand-down, cooling-off). */
+  blockToday?: string | null;
 }) {
   const [account, setAccount] = useState(String(settings.accountSize));
   const [risk, setRisk] = useState(String(settings.riskPct));
@@ -53,9 +56,11 @@ export function PositionSizer({
   // Until every field has something in it, guide — don't scold. Red is
   // reserved for a filled-in setup that genuinely doesn't work.
   const incomplete = [account, risk, entry, stop, target].some((v) => v.trim() === '');
+  // Stand-down / cooling-off only block setups dated today.
+  const blocked = blockToday != null && date === todayIso();
 
   async function logSetup() {
-    if (!out || incomplete) return;
+    if (!out || incomplete || blocked) return;
     await addTrade({
       date,
       symbol: symbol.trim().toUpperCase(),
@@ -163,12 +168,14 @@ export function PositionSizer({
           <input id="sz-date" type="date" className="num" value={date}
             onChange={(e) => setDate(e.target.value)} />
         </div>
-        <button className="btn btn-primary" onClick={logSetup} disabled={!out || incomplete}>
+        <button className="btn btn-primary" onClick={logSetup} disabled={!out || incomplete || blocked}>
           Log this setup → Trade Log
         </button>
       </div>
       <p className="field-hint">
-        Logs with "matched my rules: {allRulesChecked ? 'Y' : 'N'}" from the checklist above.
+        {blocked
+          ? 'Logging is paused — see the note at the top of the Cockpit.'
+          : `Logs with "matched my rules: ${allRulesChecked ? 'Y' : 'N'}" from the checklist above.`}
       </p>
       {logged && <p className="save-note" role="status">{logged}</p>}
     </section>

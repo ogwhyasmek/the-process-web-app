@@ -81,7 +81,11 @@ export function TradeTable({ trades }: { trades: Trade[] }) {
 
   async function saveEdit(t: Trade) {
     if (!draft) return;
-    await db.trades.put(fromDraft(t, draft));
+    const next = fromDraft(t, draft);
+    // Exit recorded just now: stamp it, so the cooling-off timer (R-06)
+    // runs from when the trade actually closed.
+    if (t.soldAt == null && next.soldAt != null) next.closedAt = Date.now();
+    await db.trades.put(next);
     setEditingId(null);
     setDraft(null);
   }
@@ -165,7 +169,14 @@ function ViewRow({ trade: t, onEdit, onDelete }: { trade: Trade; onEdit: () => v
   return (
     <tr>
       <td className="num">{t.date}</td>
-      <td className="cell-sym">{t.symbol || '—'}</td>
+      <td className="cell-sym">
+        {t.symbol || '—'}
+        {t.ruleBreaks?.length ? (
+          <span className="rule-break" title={t.ruleBreaks.join('; ')} aria-label={`Rule break: ${t.ruleBreaks.join('; ')}`}>
+            ⚑
+          </span>
+        ) : null}
+      </td>
       <td>{t.direction || '—'}</td>
       <td className={t.matchedRules === 'Y' ? 'gain' : t.matchedRules === 'N' ? 'loss' : ''}>
         {t.matchedRules || '—'}

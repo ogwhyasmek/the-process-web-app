@@ -135,15 +135,34 @@
   opacity: 0.75;
   font-weight: 500;
 }
+.gr-chip.is-open {
+  /* Logged from another page and not closed yet: counts as a trade taken. */
+  border-style: dashed;
+  color: var(--text-dim);
+}
 .gr-today-actions {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
   margin-top: 16px;
+}
+.gr-undo-hint {
+  flex: 1 1 220px;
 }
 
 .gr-settings {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 0 16px;
-  max-width: 440px;
+  align-items: end;
+  max-width: 600px;
+}
+.gr-settings .btn {
+  margin-bottom: 16px;
+  justify-self: start;
+}
+.gr-pending {
+  margin-top: 4px;
+  color: var(--amber);
 }

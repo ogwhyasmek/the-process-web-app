@@ -126,8 +126,13 @@ Notes for the hosted version:
   and a cooling-off timer after losses), Position Sizer, Options Contract
   Ticket, Greeks Lab (Black-Scholes + payoff diagram), Volatility Read, an
   and an earnings calendar for the watchlist.
-- **Daily Guardrail** — today's circuit breaker: log results in R, and the
-  page stands you down when your trade cap or loss limit is hit.
+- **Daily Guardrail** — today's circuit breaker. Every trade logged today
+  counts, from any page. Hit the trade cap or loss limit and you're stood
+  down until midnight: the Cockpit stops logging new setups, deleting
+  trades doesn't lift it, and looser limits only apply from tomorrow.
+  Undo is a 2-minute typo fix. For 30 minutes after a loss the Cockpit
+  can't log a setup (rule R-06). Trades recorded while stood down are
+  flagged as rule breaks.
 - **Trade Log** — the permanent record. Rows arrive from the sizing tools
   and the Guardrail (or manual entry); computed columns are tinted;
   one-click spreadsheet export.

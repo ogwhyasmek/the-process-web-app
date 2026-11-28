@@ -6,6 +6,8 @@
 import { useState } from 'react';
 import { addTrade } from '../../lib/trades';
 import { todayIso } from '../../lib/format';
+import { ruleBreaksForNewTrade } from '../../lib/guardrail';
+import { useGuardrail } from '../../lib/useGuardrail';
 import type { AccountSettings, YesNo } from '../../lib/db';
 
 const BLANK = {
@@ -32,6 +34,10 @@ export function AddTradeForm({
   onDone: () => void;
 }) {
   const [f, setF] = useState(BLANK);
+  // Recording a real trade is always allowed (the log must stay honest),
+  // but one dated today on a stood-down day is flagged as a rule break.
+  const guard = useGuardrail();
+  const breaks = guard.status ? ruleBreaksForNewTrade(f.date, guard.today, guard.status) : [];
   const set = (k: keyof typeof BLANK) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setF({ ...f, [k]: e.target.value });
@@ -65,6 +71,7 @@ export function AddTradeForm({
       feeling: f.feeling,
       notes: f.notes,
       source: 'manual',
+      ...(breaks.length ? { ruleBreaks: breaks } : {}),
     });
     setF(BLANK);
     onDone();
@@ -145,7 +152,13 @@ export function AddTradeForm({
           <input id="ad-notes" value={f.notes} onChange={set('notes')} />
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 10 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+        {breaks.length > 0 && (
+          <p className="field-hint log-rulebreak-note" role="status">
+            You're stood down today. This trade will still be recorded — honestly — and flagged
+            as a rule break.
+          </p>
+        )}
         <button type="submit" className="btn btn-primary">Add to log</button>
         <button type="button" className="btn" onClick={onDone}>Close</button>
       </div>

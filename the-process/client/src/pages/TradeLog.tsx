@@ -111,14 +111,14 @@ export function TradeLog() {
       'Date', 'Symbol', 'Up or down', 'Matched my rules', 'Trade type', 'Setup tag',
       'Buy price', 'Stop price', 'Target price', 'Stop distance', 'Reward vs risk',
       'Max dollar risk', 'Position size', 'Sold at', 'Money made or lost', 'Score (R)',
-      'Followed my plan', 'How I was feeling', 'Notes',
+      'Followed my plan', 'How I was feeling', 'Notes', 'Rule breaks',
     ];
     const rows = filtered.map((t: Trade) => [
       t.date, t.symbol, t.direction, t.matchedRules, t.tradeType, t.setupTag,
       t.buyPrice, t.stopPrice, t.targetPrice,
       round(stopDistance(t)), round(rewardToRisk(t)), round(maxDollarRisk(t)),
       positionSize(t), t.soldAt, round(moneyResult(t)), round(tradeR(t)),
-      t.followedPlan, t.feeling, t.notes,
+      t.followedPlan, t.feeling, t.notes, (t.ruleBreaks ?? []).join('; '),
     ]);
     downloadFile(`the-process-trade-log-${todayIso()}.csv`, buildCsv(header, rows));
   }

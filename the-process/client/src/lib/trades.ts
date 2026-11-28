@@ -76,7 +76,9 @@ export async function lastLossToday(todayIsoDate: string): Promise<number | null
   let last: number | null = null;
   for (const t of todays) {
     const r = tradeR(t);
-    if (r != null && r < 0 && (last == null || t.createdAt > last)) last = t.createdAt;
+    // When the loss happened: the exit time if recorded later, else logging time.
+    const at = t.closedAt ?? t.createdAt;
+    if (r != null && r < 0 && (last == null || at > last)) last = at;
   }
   return last;
 }
