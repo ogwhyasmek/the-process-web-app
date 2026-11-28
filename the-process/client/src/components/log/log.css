@@ -114,3 +114,15 @@ tr:hover .cell-computed {
 .add-form h2 {
   font-size: 15px;
 }
+
+/* Automatically flagged rule break (e.g. logged after a stand-down). */
+.rule-break {
+  margin-left: 6px;
+  color: var(--loss);
+  font-size: 12px;
+  cursor: help;
+}
+.log-rulebreak-note {
+  color: var(--loss);
+  flex-basis: 100%;
+}

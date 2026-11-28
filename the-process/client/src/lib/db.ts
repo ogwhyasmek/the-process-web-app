@@ -58,6 +58,14 @@ export interface Trade {
 
   source: 'sizer' | 'ticket' | 'guardrail' | 'manual';
   createdAt: number;
+  /**
+   * When the exit (soldAt) was recorded, if after logging. The cooling-off
+   * timer (R-06) runs from when a loss actually happened, not from when
+   * the setup was logged. Absent on older rows.
+   */
+  closedAt?: number | null;
+  /** Automatically recorded rule breaks, e.g. 'Logged after stand-down'. */
+  ruleBreaks?: string[];
 }
 
 /** The single persistent account record (spec §6.1). */
@@ -68,6 +76,16 @@ export interface AccountSettings {
   /** Daily Guardrail settings (§6.3). */
   maxTradesPerDay: number;
   dailyLossLimitR: number;
+  /**
+   * Daily limits that were LOOSENED, waiting to take effect (from the date
+   * given). Loosening never applies the same day, so a limit can't be
+   * raised to escape a stand-down; tightening applies at once.
+   */
+  pendingLimits?: {
+    maxTradesPerDay?: number;
+    dailyLossLimitR?: number;
+    effectiveFrom: string;
+  } | null;
 }
 
 /** One screener watchlist entry (spec §6.6). */

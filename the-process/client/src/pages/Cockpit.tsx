@@ -15,6 +15,7 @@ import { EarningsCalendar } from '../components/cockpit/EarningsCalendar';
 import { useKvState, kvGet, kvSet } from '../lib/kv';
 import { db, getSettings, type AccountSettings } from '../lib/db';
 import { todayIso } from '../lib/format';
+import { useGuardrail } from '../lib/useGuardrail';
 import type { SizerPrefill } from '../components/cockpit/PositionSizer';
 import '../components/cockpit/cockpit.css';
 
@@ -34,6 +35,19 @@ export function Cockpit() {
     'cockpit.greeks',
     DEFAULT_GREEKS,
   );
+
+  // Daily Guardrail: while stood down, or cooling off after a loss (R-06),
+  // the Cockpit can't log a new setup for today. Planning still works.
+  const guard = useGuardrail();
+  const blockToday: string | null = !guard.status
+    ? null
+    : guard.status.locked
+      ? 'Stood down for today — the Daily Guardrail hit a limit. New setups can be logged again tomorrow.'
+      : guard.coolingUntil
+        ? `Cooling off after a loss (rule R-06) — new setups can be logged from ${new Date(
+            guard.coolingUntil,
+          ).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`
+        : null;
 
   useEffect(() => {
     getSettings().then(setSettings);
@@ -62,6 +76,12 @@ export function Cockpit() {
       title="Trade Cockpit"
       lede="Everything that happens before an entry. Nothing here is advice — it's the process that keeps one trade from becoming a bad day."
     >
+      {blockToday && (
+        <p className={`cockpit-block ${guard.status?.locked ? 'is-locked' : ''}`} role="status">
+          {blockToday}
+        </p>
+      )}
+
       <Checklist checks={checks} onChange={setChecks} />
 
       <div className="cockpit-pair">
@@ -70,11 +90,13 @@ export function Cockpit() {
           allRulesChecked={allRulesChecked}
           prefill={prefill}
           onLogged={resetChecklist}
+          blockToday={blockToday}
         />
         <ContractTicket
           settings={settings}
           allRulesChecked={allRulesChecked}
           onLogged={resetChecklist}
+          blockToday={blockToday}
         />
       </div>
 

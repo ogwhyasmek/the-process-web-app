@@ -14,11 +14,14 @@ export function ContractTicket({
   settings,
   allRulesChecked,
   onLogged,
+  blockToday = null,
 }: {
   settings: AccountSettings;
   allRulesChecked: boolean;
   /** Fired after the row is saved — the Cockpit clears the checklist. */
   onLogged?: () => void;
+  /** Why new setups for today can't be logged right now (stand-down, cooling-off). */
+  blockToday?: string | null;
 }) {
   const [account, setAccount] = useState(String(settings.accountSize));
   const [risk, setRisk] = useState(String(settings.riskPct));
@@ -43,7 +46,9 @@ export function ContractTicket({
   const out = 'warning' in result ? null : result;
   // Guide while the form is still being filled in; red only for real mistakes.
   const incomplete = [account, risk, entry, stop, target, mult].some((v) => v.trim() === '');
-  const canLog = !incomplete && !!out && !out.zeroContracts;
+  // Stand-down / cooling-off only block setups dated today.
+  const blocked = blockToday != null && date === todayIso();
+  const canLog = !incomplete && !!out && !out.zeroContracts && !blocked;
 
   async function logSetup() {
     if (!canLog) return;
@@ -197,6 +202,9 @@ export function ContractTicket({
           Log this setup → Trade Log
         </button>
       </div>
+      {blocked && (
+        <p className="field-hint">Logging is paused — see the note at the top of the Cockpit.</p>
+      )}
       {logged && <p className="save-note" role="status">{logged}</p>}
     </section>
   );

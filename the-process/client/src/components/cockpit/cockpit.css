@@ -560,3 +560,18 @@
 .cockpit-more a {
   color: var(--amber);
 }
+
+/* Daily Guardrail block on logging (stand-down or R-06 cooling-off). */
+.cockpit-block {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--caution);
+  background: rgba(217, 177, 59, 0.1);
+  color: var(--text);
+  font-size: 14px;
+}
+.cockpit-block.is-locked {
+  border-color: var(--loss);
+  background: var(--loss-soft);
+}
