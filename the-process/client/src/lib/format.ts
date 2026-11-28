@@ -57,3 +57,25 @@ export function todayIso(): string {
   const p = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * Chart ticks at the first trading day of each month in a YYYY-MM-DD series
+ * (oldest → newest). The first point only counts if it starts its month,
+ * so a window opening mid-month doesn't get a stray partial-month label.
+ */
+export function monthStartTicks(dates: string[]): string[] {
+  const ticks: string[] = [];
+  for (let i = 1; i < dates.length; i++) {
+    if (dates[i].slice(0, 7) !== dates[i - 1].slice(0, 7)) ticks.push(dates[i]);
+  }
+  return ticks;
+}
+
+/** "Mar" for a YYYY-MM-DD tick; January carries the year: "Jan '26". */
+export function fmtMonthTick(date: string): string {
+  const month = Number(date.slice(5, 7));
+  const label = MONTHS[month - 1] ?? date;
+  return month === 1 ? `${label} '${date.slice(2, 4)}` : label;
+}

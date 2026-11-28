@@ -99,55 +99,62 @@ marketData.get('/quotes', async (req, res) => {
   /** @type {Record<string, {source: string, fetchedAt: number, price: number|null, changePct: number|null}>} */
   const quotes = {};
 
-  for (const symbol of symbols) {
-    // No key configured → labeled demo data keeps the app navigable.
-    if (!config.finnhubKey) {
-      const demo = DEMO_QUOTES[symbol];
-      quotes[symbol] = {
-        source: 'demo',
-        fetchedAt: Date.now(),
-        price: demo?.price ?? null,
-        changePct: demo?.changePct ?? null,
-      };
-      continue;
-    }
+  // All symbols are queued at once so the ticker's quotes run back to back
+  // (~1/sec), instead of each waiting for the previous one and
+  // interleaving with research requests (~2s per quote when busy).
+  await Promise.all(
+    symbols.map(async (symbol) => {
+      // No key configured → labeled demo data keeps the app navigable.
+      if (!config.finnhubKey) {
+        const demo = DEMO_QUOTES[symbol];
+        quotes[symbol] = {
+          source: 'demo',
+          fetchedAt: Date.now(),
+          price: demo?.price ?? null,
+          changePct: demo?.changePct ?? null,
+        };
+        return;
+      }
 
-    const key = `quote:${symbol}`;
-    const fresh = cache.getFresh(key);
-    if (fresh !== undefined) {
-      const { ageMs } = cache.getAny(key);
-      quotes[symbol] = {
-        source: 'cache',
-        fetchedAt: Date.now() - ageMs,
-        price: fresh.c ?? null,
-        changePct: fresh.dp ?? null,
-      };
-      continue;
-    }
+      const key = `quote:${symbol}`;
+      const fresh = cache.getFresh(key);
+      if (fresh !== undefined) {
+        const { ageMs } = cache.getAny(key);
+        quotes[symbol] = {
+          source: 'cache',
+          fetchedAt: Date.now() - ageMs,
+          price: fresh.c ?? null,
+          changePct: fresh.dp ?? null,
+        };
+        return;
+      }
 
-    try {
-      // Background ticker refresh: yields to research requests (§6.6/§6.7)
-      // the user is actually waiting on.
-      const data = await fetchQuote(symbol, { priority: 'low' });
-      cache.set(key, data, config.ttl.quote);
-      quotes[symbol] = {
-        source: 'live',
-        fetchedAt: Date.now(),
-        price: data.c ?? null,
-        changePct: data.dp ?? null,
-      };
-    } catch {
-      const stale = cache.getAny(key);
-      quotes[symbol] = stale
-        ? {
-            source: 'last-known',
-            fetchedAt: Date.now() - stale.ageMs,
-            price: stale.value.c ?? null,
-            changePct: stale.value.dp ?? null,
-          }
-        : { source: 'unavailable', fetchedAt: Date.now(), price: null, changePct: null };
-    }
-  }
+      try {
+        // Refreshing a price we can already show yields to research requests
+        // the user is waiting on (§6.6/§6.7). But if there's nothing to show
+        // yet (first load), don't make the strip sit on "fetching prices…".
+        const priority = cache.getAny(key) ? 'low' : 'normal';
+        const data = await fetchQuote(symbol, { priority });
+        cache.set(key, data, config.ttl.quote);
+        quotes[symbol] = {
+          source: 'live',
+          fetchedAt: Date.now(),
+          price: data.c ?? null,
+          changePct: data.dp ?? null,
+        };
+      } catch {
+        const stale = cache.getAny(key);
+        quotes[symbol] = stale
+          ? {
+              source: 'last-known',
+              fetchedAt: Date.now() - stale.ageMs,
+              price: stale.value.c ?? null,
+              changePct: stale.value.dp ?? null,
+            }
+          : { source: 'unavailable', fetchedAt: Date.now(), price: null, changePct: null };
+      }
+      }),
+  );
 
   res.json({ quotes });
 });

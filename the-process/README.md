@@ -110,6 +110,15 @@ Notes for the hosted version:
   Analytics is the hosted backup path.
 - The Worker's cache is per-isolate and best-effort; Finnhub throttling
   (~1 req/s) still applies per isolate.
+- Set a build environment variable `NODE_VERSION=22` in the Cloudflare
+  build settings; the build (Vite 6) needs Node 20 or newer.
+- Price history for the Stock Analyzer's chart comes from Yahoo's
+  unofficial chart endpoint, which sometimes rate-limits requests from
+  cloud servers. If it does, the Analyzer still works; only the technical
+  chart and its detected setups are missing.
+- Your trade data lives in each browser's own storage. The hosted app on
+  your phone and on your desktop keep separate trade logs — back up from
+  the one you use, or pick one device for logging.
 
 ## What's inside
 
