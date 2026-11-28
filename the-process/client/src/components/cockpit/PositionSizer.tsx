@@ -83,9 +83,9 @@ export function PositionSizer({
     });
     onLogged?.();
     setLogged(
-      `${symbol.trim().toUpperCase() || 'Trade'} logged — it's in the Trade Log. Checklist cleared for the next trade.`,
+      `${symbol.trim().toUpperCase() || 'Trade'} logged. Close it from the Daily Guardrail when you exit. Checklist cleared for the next trade.`,
     );
-    setTimeout(() => setLogged(null), 4000);
+    setTimeout(() => setLogged(null), 6000);
   }
 
   return (
