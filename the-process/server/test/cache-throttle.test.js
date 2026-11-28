@@ -65,6 +65,25 @@ describe('ThrottleQueue', () => {
     assert.ok(starts[2] - starts[0] >= 58, `span ${starts[2] - starts[0]}ms`);
   });
 
+  // In the Cloudflare Worker, a cancelled request's code simply stops: it
+  // never claims its slot or its place in line. Others must not wait on it.
+  it('skips a low-priority waiter that stopped checking in (cancelled request)', async () => {
+    const queue = new ThrottleQueue(20);
+    queue.lowLine.push({ id: -1, lastSeen: Date.now() }); // head of line, never polls again
+    const t0 = Date.now();
+    await queue.run(async () => {}, { priority: 'low' });
+    assert.ok(Date.now() - t0 < 1000, `waited ${Date.now() - t0}ms behind an abandoned waiter`);
+  });
+
+  it('is not blocked by a normal slot that was reserved but never claimed', async () => {
+    const queue = new ThrottleQueue(20);
+    queue.normalSlots.push(Date.now() + 10); // reserved by a request that was then cancelled
+    const t0 = Date.now();
+    await queue.run(async () => {}, { priority: 'low' });
+    await queue.run(async () => {});
+    assert.ok(Date.now() - t0 < 1000, `took ${Date.now() - t0}ms`);
+  });
+
   it('keeps going after a task fails, passing the error to its caller only', async () => {
     const queue = new ThrottleQueue(1);
     const failed = queue.run(async () => { throw new Error('upstream 429'); });
