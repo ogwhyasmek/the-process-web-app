@@ -51,7 +51,8 @@ export function useGuardrail() {
   const status = data && limits ? dayStatus(data.trades, limits, data.latch, today) : null;
 
   // Hit a limit and not latched yet → latch the day.
-  const toLatch = status ? latchToRecord(status, today, now) : null;
+  const lastTradeId = data?.trades.length ? data.trades[data.trades.length - 1].id : undefined;
+  const toLatch = status ? latchToRecord(status, today, now, lastTradeId) : null;
   useEffect(() => {
     if (toLatch) kvSet(STAND_DOWN_KEY, toLatch).catch(() => undefined);
   }, [toLatch?.date, toLatch?.reason]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -61,6 +62,7 @@ export function useGuardrail() {
     today,
     now,
     trades: data?.trades ?? [],
+    latch: data?.latch ?? null,
     settings: data?.settings ?? DEFAULT_SETTINGS,
     limits,
     status,

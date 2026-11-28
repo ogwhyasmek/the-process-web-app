@@ -16,7 +16,13 @@ import { Page } from '../components/Page';
 import { db, getSettings, saveSettings } from '../lib/db';
 import { addTrade, tradeR } from '../lib/trades';
 import { fmtR } from '../lib/format';
-import { applyLimitEdit, canUndo, UNDO_WINDOW_MS } from '../lib/guardrail';
+import {
+  applyLimitEdit,
+  canUndo,
+  STAND_DOWN_KEY,
+  undoLiftsStandDown,
+  UNDO_WINDOW_MS,
+} from '../lib/guardrail';
 import { useGuardrail } from '../lib/useGuardrail';
 import '../components/guardrail/guardrail.css';
 
@@ -83,7 +89,13 @@ export function Guardrail() {
 
   async function undoLast() {
     if (!undoable || lastGuardrailEntry?.id == null) return;
-    await db.trades.delete(lastGuardrailEntry.id);
+    const lifts = undoLiftsStandDown(g.latch, lastGuardrailEntry, today, Date.now());
+    const id = lastGuardrailEntry.id;
+    // One transaction: the entry and (if it caused it) the stand-down go together.
+    await db.transaction('rw', db.trades, db.kv, async () => {
+      await db.trades.delete(id);
+      if (lifts) await db.kv.delete(STAND_DOWN_KEY);
+    });
   }
 
   const standDownLine = () => {
@@ -288,8 +300,9 @@ export function Guardrail() {
                 : 'Undo last'}
             </button>
             <span className="field-hint gr-undo-hint">
-              Undo fixes a typo within 2 minutes. Anything else: edit it in the Trade Log — and
-              removing a trade never lifts a stand-down.
+              Undo fixes a typo within 2 minutes — and if that typo caused a stand-down, undoing
+              it lifts it. Anything else: edit it in the Trade Log; removing a trade never lifts a
+              stand-down.
             </span>
           </div>
         </section>

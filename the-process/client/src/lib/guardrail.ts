@@ -11,6 +11,8 @@
  *   deleting or editing trades can't lift it.
  * - Limits: tightening applies at once; loosening only from tomorrow.
  * - Undo is a 2-minute typo fix, not a way out. There is no "reset day".
+ *   One exception: undoing the very entry that triggered the stand-down
+ *   (a mistyped result) lifts it — then the rules simply run again.
  * - 30 minutes after a loss, the Cockpit can't log a new setup (R-06).
  * - While stood down, the Cockpit can't log new setups; the Trade Log can
  *   still record a trade that really happened, flagged as a rule break.
@@ -34,6 +36,8 @@ export interface StandDownLatch {
   date: string; // YYYY-MM-DD
   reason: 'trades' | 'loss';
   at: number;
+  /** The trade that tipped the day over, if known (for the undo exception). */
+  triggerId?: number;
 }
 
 const LIMIT_KEYS = ['maxTradesPerDay', 'dailyLossLimitR'] as const;
@@ -156,10 +160,43 @@ export function dayStatus(
   };
 }
 
-/** The latch to record when a limit is hit and today isn't latched yet. */
-export function latchToRecord(status: DayStatus, today: string, now: number): StandDownLatch | null {
+/**
+ * The latch to record when a limit is hit and today isn't latched yet.
+ * `triggerId` is the most recent of today's trades — the one that tipped it.
+ */
+export function latchToRecord(
+  status: DayStatus,
+  today: string,
+  now: number,
+  triggerId?: number,
+): StandDownLatch | null {
   if (status.latched || !(status.lockedByLoss || status.lockedByTrades)) return null;
-  return { date: today, reason: status.lockedByLoss ? 'loss' : 'trades', at: now };
+  return {
+    date: today,
+    reason: status.lockedByLoss ? 'loss' : 'trades',
+    at: now,
+    ...(triggerId != null ? { triggerId } : {}),
+  };
+}
+
+/**
+ * The one way a stand-down lifts before midnight: undoing (within the
+ * 2-minute window) the exact entry that triggered it — a typo fix. After
+ * that the normal rules run again, so still being over a limit re-locks.
+ */
+export function undoLiftsStandDown(
+  latch: StandDownLatch | null | undefined,
+  undone: Trade | undefined,
+  today: string,
+  now: number,
+): boolean {
+  return (
+    !!latch &&
+    latch.date === today &&
+    latch.triggerId != null &&
+    undone?.id === latch.triggerId &&
+    canUndo(undone, now)
+  );
 }
 
 /** "Undo last" is a typo fix: only a Guardrail entry, only within 2 minutes. */

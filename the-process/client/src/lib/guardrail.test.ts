@@ -14,6 +14,7 @@ import {
   RULE_BREAK_AFTER_STAND_DOWN,
   ruleBreaksForNewTrade,
   UNDO_WINDOW_MS,
+  undoLiftsStandDown,
 } from './guardrail';
 
 const TODAY = '2026-11-28';
@@ -174,5 +175,38 @@ describe('rule-break flag for trades recorded while stood down', () => {
     const locked = dayStatus([result(-2)], limits, null, TODAY);
     expect(ruleBreaksForNewTrade(TODAY, TODAY, clear)).toEqual([]);
     expect(ruleBreaksForNewTrade('2026-11-20', TODAY, locked)).toEqual([]);
+  });
+});
+
+describe('undo exception: undoing the typo that caused the stand-down lifts it', () => {
+  const typo = result(-10, { id: 7, createdAt: 1000 });
+  const latch = { date: TODAY, reason: 'loss' as const, at: 1000, triggerId: 7 };
+
+  it('records which trade tipped the day over', () => {
+    const hit = dayStatus([result(1, { id: 6 }), typo], limits, null, TODAY);
+    expect(latchToRecord(hit, TODAY, 1000, 7)).toMatchObject({ reason: 'loss', triggerId: 7 });
+  });
+
+  it('lifts when the triggering entry is undone within 2 minutes', () => {
+    expect(undoLiftsStandDown(latch, typo, TODAY, 1000 + UNDO_WINDOW_MS)).toBe(true);
+  });
+
+  it('does not lift after the window, for another entry, or another day', () => {
+    expect(undoLiftsStandDown(latch, typo, TODAY, 1000 + UNDO_WINDOW_MS + 1)).toBe(false);
+    expect(undoLiftsStandDown(latch, result(-1, { id: 8, createdAt: 1000 }), TODAY, 1500)).toBe(false);
+    expect(undoLiftsStandDown({ ...latch, date: '2026-11-27' }, typo, TODAY, 1500)).toBe(false);
+    expect(undoLiftsStandDown({ ...latch, triggerId: undefined }, typo, TODAY, 1500)).toBe(false);
+  });
+
+  it('never lifts for a trade logged from another page', () => {
+    const setup = trade({ id: 7, source: 'sizer', createdAt: 1000 });
+    expect(undoLiftsStandDown(latch, setup, TODAY, 1500)).toBe(false);
+  });
+
+  it('re-locks at once if the day is still over a limit without the typo', () => {
+    // After the lift there's no latch; the remaining trades still hit the loss limit.
+    const s = dayStatus([result(-1), result(-1)], limits, null, TODAY);
+    expect(s.locked).toBe(true);
+    expect(latchToRecord(s, TODAY, 2000, 5)).not.toBeNull();
   });
 });
