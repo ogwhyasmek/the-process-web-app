@@ -24,6 +24,8 @@ import {
   UNDO_WINDOW_MS,
 } from '../lib/guardrail';
 import { useGuardrail } from '../lib/useGuardrail';
+import { openTrades } from '../lib/closing';
+import { OpenTrades } from '../components/log/OpenTrades';
 import '../components/guardrail/guardrail.css';
 
 type YesNoChoice = 'Y' | 'N' | '';
@@ -196,10 +198,22 @@ export function Guardrail() {
         </div>
       </section>
 
+      {/* Setups logged from the Cockpit today: close them here in one click,
+          rather than logging the result again (which would count twice). */}
+      <OpenTrades
+        trades={openTrades(todays)}
+        title="Close an open trade"
+        sub="Logged from the Cockpit today. Close it here when you exit — logging the result again below would count it twice."
+        today={today}
+      />
+
       <div className="gr-pair">
         <section className="card" aria-labelledby="gr-log-title">
           <h2 id="gr-log-title">Log a result</h2>
           <p className="card-sub">
+            {openTrades(todays).length > 0
+              ? 'For a trade you didn’t set up in the Cockpit. '
+              : ''}
             In R: stopped out at plan is −1, double your risk is +2. Tag the symbol and whether you
             followed the plan — that honesty powers the analytics.
           </p>

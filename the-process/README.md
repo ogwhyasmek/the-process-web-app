@@ -135,7 +135,10 @@ Notes for the hosted version:
   flagged as rule breaks.
 - **Trade Log** — the permanent record. Rows arrive from the sizing tools
   and the Guardrail (or manual entry); computed columns are tinted;
-  one-click spreadsheet export.
+  one-click spreadsheet export. Open trades close in one click — "Stopped
+  out", "Hit target", or an exit price with a live R preview — from the
+  Guardrail (today's) or the Trade Log (all, with a nudge for any left open
+  from an earlier day), so nothing silently drops out of Analytics.
 - **Analytics** — equity curve (max drawdown marked), R-distribution, rolling win rate,
   weekday/month breakdowns, plan-adherence and per-symbol/per-setup tables,
   and auto-written insights that stay silent until the sample size earns them.

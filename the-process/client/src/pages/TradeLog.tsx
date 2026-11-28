@@ -19,6 +19,8 @@ import {
 } from '../lib/trades';
 import { buildCsv, downloadFile } from '../lib/csv';
 import { todayIso } from '../lib/format';
+import { openTrades } from '../lib/closing';
+import { OpenTrades } from '../components/log/OpenTrades';
 import { useEffect } from 'react';
 import '../components/log/log.css';
 
@@ -134,6 +136,24 @@ export function TradeLog() {
       lede="The permanent record — every trade ever logged, in one place. Typed cells are yours; tinted cells are computed and always current."
     >
       <SummaryStrip rs={allRs} />
+
+      {(() => {
+        const open = openTrades(all);
+        const today = todayIso();
+        const stale = open.filter((t) => t.date < today).length;
+        return (
+          <OpenTrades
+            trades={open}
+            title="Open trades"
+            sub={
+              stale > 0
+                ? `${stale} still open from an earlier day — close ${stale === 1 ? 'it' : 'them'} so Analytics counts ${stale === 1 ? 'it' : 'them'}. Open trades never reach your stats.`
+                : 'Close each one when you exit — one click for a stop or target. Open trades never reach your stats.'
+            }
+            today={today}
+          />
+        );
+      })()}
 
       <div className="log-toolbar">
         <div className="log-filters">
